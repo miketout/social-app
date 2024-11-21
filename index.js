@@ -1,13 +1,12 @@
 import 'react-native-gesture-handler' // must be first
-import 'node-libs-react-native/globals.js'
-import '#/platform/polyfills'
-
 import {LogBox} from 'react-native'
-import {registerRootComponent} from 'expo'
 
-import {doPolyfill} from '#/lib/api/api-polyfill'
-import App from '#/App'
+import '#/platform/polyfills'
 import {IS_TEST} from '#/env'
+import {registerRootComponent} from 'expo'
+import {doPolyfill} from '#/lib/api/api-polyfill'
+
+import App from '#/App'
 
 doPolyfill()
 

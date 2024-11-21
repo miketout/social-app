@@ -1,7 +1,6 @@
 module.exports = function (api) {
   api.cache(true)
   const isTestEnv = process.env.NODE_ENV === 'test'
-
   return {
     presets: [
       [
@@ -48,12 +47,7 @@ module.exports = function (api) {
             state: './src/state',
             view: './src/view',
             crypto: './src/platform/crypto.ts',
-            // Ensure 'bn.js' is resolved properly
-            'bn.js': './node_modules/bn.js',
-            buffer: './node_modules/buffer',
-            stream: './node_modules/stream-browserify',
           },
-          extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.cjs'],
         },
       ],
       'react-native-reanimated/plugin', // NOTE: this plugin MUST be last

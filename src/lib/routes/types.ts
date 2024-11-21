@@ -50,7 +50,6 @@ export type CommonNavigatorParams = {
   StarterPackEdit: {
     rkey?: string
   }
-  ConfirmLogin: undefined
 }
 
 export type BottomTabNavigatorParams = CommonNavigatorParams & {
@@ -59,12 +58,10 @@ export type BottomTabNavigatorParams = CommonNavigatorParams & {
   NotificationsTab: undefined
   MyProfileTab: undefined
   MessagesTab: undefined
-  ConfirmLogin: undefined
 }
 
 export type HomeTabNavigatorParams = CommonNavigatorParams & {
   Home: undefined
-  ConfirmLogin: undefined
 }
 
 export type SearchTabNavigatorParams = CommonNavigatorParams & {
@@ -111,7 +108,6 @@ export type AllNavigatorParams = CommonNavigatorParams & {
   StarterPackEdit: {
     rkey?: string
   }
-  ConfirmLogin: undefined
 }
 
 // NOTE

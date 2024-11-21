@@ -37,7 +37,6 @@ import {Provider as LoggedOutViewProvider} from '#/state/shell/logged-out'
 import {Provider as ProgressGuideProvider} from '#/state/shell/progress-guide'
 import {Provider as SelectedFeedProvider} from '#/state/shell/selected-feed'
 import {Provider as StarterPackProvider} from '#/state/shell/starter-pack'
-import {Provider as VerusSessionProvider} from '#/state/verus_session'
 import * as Toast from '#/view/com/util/Toast'
 import {ToastContainer} from '#/view/com/util/Toast.web'
 import {Shell} from '#/view/shell/index'
@@ -147,29 +146,27 @@ function App() {
    */
   return (
     <A11yProvider>
-      <VerusSessionProvider>
-        <SessionProvider>
-          <ShellStateProvider>
-            <PrefsStateProvider>
-              <InvitesStateProvider>
-                <ModalStateProvider>
-                  <DialogStateProvider>
-                    <LightboxStateProvider>
-                      <I18nProvider>
-                        <PortalProvider>
-                          <StarterPackProvider>
-                            <InnerApp />
-                          </StarterPackProvider>
-                        </PortalProvider>
-                      </I18nProvider>
-                    </LightboxStateProvider>
-                  </DialogStateProvider>
-                </ModalStateProvider>
-              </InvitesStateProvider>
-            </PrefsStateProvider>
-          </ShellStateProvider>
-        </SessionProvider>
-      </VerusSessionProvider>
+      <SessionProvider>
+        <ShellStateProvider>
+          <PrefsStateProvider>
+            <InvitesStateProvider>
+              <ModalStateProvider>
+                <DialogStateProvider>
+                  <LightboxStateProvider>
+                    <I18nProvider>
+                      <PortalProvider>
+                        <StarterPackProvider>
+                          <InnerApp />
+                        </StarterPackProvider>
+                      </PortalProvider>
+                    </I18nProvider>
+                  </LightboxStateProvider>
+                </DialogStateProvider>
+              </ModalStateProvider>
+            </InvitesStateProvider>
+          </PrefsStateProvider>
+        </ShellStateProvider>
+      </SessionProvider>
     </A11yProvider>
   )
 }
