@@ -198,6 +198,7 @@ export function agentToSessionAccount(
     return undefined
   }
   return {
+    type: 'bsky',
     service: agent.service.toString(),
     did: agent.session.did,
     handle: agent.session.handle,
