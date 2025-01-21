@@ -36,6 +36,12 @@ export function AccountSettingsScreen({}: Props) {
   const exportCarControl = useDialogControl()
   const deactivateAccountControl = useDialogControl()
 
+  if (currentAccount?.type === 'dual') {
+    console.log(currentAccount.id)
+  } else {
+    console.log('using the standard bsky account')
+  }
+
   return (
     <Layout.Screen>
       <Layout.Header.Outer>

@@ -35,7 +35,16 @@ export async function createAgentAndResume(
     event: AtpSessionEvent,
   ) => void,
 ) {
-  const agent = new BskyAppAgent({service: storedAccount.service})
+  let agent: BskyAppAgent
+  // Restore either the standard BskyAppAgent or the DualAppAgent.
+  if (storedAccount.type === 'dual') {
+    const dualAgent = new DualAppAgent({service: storedAccount.service})
+    dualAgent.dualSession.id = storedAccount.id
+    agent = dualAgent
+  } else {
+    agent = new BskyAppAgent({service: storedAccount.service})
+  }
+
   if (storedAccount.pdsUrl) {
     agent.sessionManager.pdsUrl = new URL(storedAccount.pdsUrl)
   }
@@ -194,24 +203,48 @@ export function agentToSessionAccountOrThrow(agent: BskyAgent): SessionAccount {
 export function agentToSessionAccount(
   agent: BskyAgent,
 ): SessionAccount | undefined {
-  if (!agent.session) {
-    return undefined
-  }
-  return {
-    type: 'bsky',
-    service: agent.service.toString(),
-    did: agent.session.did,
-    handle: agent.session.handle,
-    email: agent.session.email,
-    emailConfirmed: agent.session.emailConfirmed || false,
-    emailAuthFactor: agent.session.emailAuthFactor || false,
-    refreshJwt: agent.session.refreshJwt,
-    accessJwt: agent.session.accessJwt,
-    signupQueued: isSignupQueued(agent.session.accessJwt),
-    active: agent.session.active,
-    status: agent.session.status as SessionAccount['status'],
-    pdsUrl: agent.pdsUrl?.toString(),
-    isSelfHosted: !agent.serviceUrl.toString().startsWith(BSKY_SERVICE),
+  if (agent instanceof DualAppAgent) {
+    if (!agent.session) {
+      return undefined
+    }
+    return {
+      type: 'dual',
+      id: agent.dualSession.id,
+      service: agent.service.toString(),
+      did: agent.session.did,
+      handle: agent.session.handle,
+      email: agent.session.email,
+      emailConfirmed: agent.session.emailConfirmed || false,
+      emailAuthFactor: agent.session.emailAuthFactor || false,
+      refreshJwt: agent.session.refreshJwt,
+      accessJwt: agent.session.accessJwt,
+      signupQueued: isSignupQueued(agent.session.accessJwt),
+      active: agent.session.active,
+      status: agent.session.status as SessionAccount['status'],
+      pdsUrl: agent.pdsUrl?.toString(),
+      isSelfHosted: !agent.serviceUrl.toString().startsWith(BSKY_SERVICE),
+    }
+    // Handle the existing BskyAgent the same as before.
+  } else if (agent instanceof BskyAgent) {
+    if (!agent.session) {
+      return undefined
+    }
+    return {
+      type: 'bsky',
+      service: agent.service.toString(),
+      did: agent.session.did,
+      handle: agent.session.handle,
+      email: agent.session.email,
+      emailConfirmed: agent.session.emailConfirmed || false,
+      emailAuthFactor: agent.session.emailAuthFactor || false,
+      refreshJwt: agent.session.refreshJwt,
+      accessJwt: agent.session.accessJwt,
+      signupQueued: isSignupQueued(agent.session.accessJwt),
+      active: agent.session.active,
+      status: agent.session.status as SessionAccount['status'],
+      pdsUrl: agent.pdsUrl?.toString(),
+      isSelfHosted: !agent.serviceUrl.toString().startsWith(BSKY_SERVICE),
+    }
   }
 }
 
@@ -308,3 +341,85 @@ class BskyAppAgent extends BskyAgent {
 }
 
 export type {BskyAppAgent}
+
+export async function createDualAgentAndLogin(
+  {
+    service,
+    identifier,
+    password,
+    authFactorToken,
+  }: {
+    service: string
+    identifier: string
+    password: string
+    authFactorToken?: string
+  },
+  onSessionChange: (
+    agent: BskyAgent,
+    did: string,
+    event: AtpSessionEvent,
+  ) => void,
+) {
+  // Use same code as for the BskyAppAgent but instead create a DualAppAgent.
+  const agent = new DualAppAgent({service})
+  agent.dualSession.id = 'temp-id'
+  await agent.login({identifier, password, authFactorToken})
+
+  const account = agentToSessionAccountOrThrow(agent)
+  const gates = tryFetchGates(account.did, 'prefer-fresh-gates')
+  const moderation = configureModerationForAccount(agent, account)
+  return agent.prepare(gates, moderation, onSessionChange)
+}
+
+type DualSession = {
+  id: string
+}
+
+// Not exported. Use factories above to create it.
+class DualAppAgent extends BskyAppAgent {
+  public dualSession: DualSession = {
+    id: '',
+  }
+
+  persistSessionHandler: ((event: AtpSessionEvent) => void) | undefined =
+    undefined
+
+  async prepare(
+    // Not awaited in the calling code so we can delay blocking on them.
+    gates: Promise<void>,
+    moderation: Promise<void>,
+    onSessionChange: (
+      agent: BskyAgent,
+      did: string,
+      event: AtpSessionEvent,
+    ) => void,
+  ) {
+    // There's nothing else left to do, so block on them here.
+    await Promise.all([gates, moderation])
+
+    // Now the agent is ready.
+    const account = agentToSessionAccountOrThrow(this)
+    let lastSession = this.sessionManager.session
+    this.persistSessionHandler = event => {
+      if (this.sessionManager.session) {
+        lastSession = this.sessionManager.session
+      } else if (event === 'network-error') {
+        // Put it back, we'll try again later.
+        this.sessionManager.session = lastSession
+      }
+
+      onSessionChange(this, account.did, event)
+      if (event !== 'create' && event !== 'update') {
+        addSessionErrorLog(account.did, event)
+      }
+    }
+    return {account, agent: this}
+  }
+
+  dispose() {
+    this.sessionManager.session = undefined
+    this.persistSessionHandler = undefined
+  }
+}
+
+export type {DualAppAgent}

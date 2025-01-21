@@ -11,8 +11,8 @@ import {
   agentToSessionAccount,
   BskyAppAgent,
   createAgentAndCreateAccount,
-  createAgentAndLogin,
   createAgentAndResume,
+  createDualAgentAndLogin,
   sessionAccountToSession,
 } from './agent'
 import {getInitialState, reducer} from './reducer'
@@ -92,7 +92,7 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
     async (params, logContext) => {
       addSessionDebugLog({type: 'method:start', method: 'login'})
       const signal = cancelPendingTask()
-      const {agent, account} = await createAgentAndLogin(
+      const {agent, account} = await createDualAgentAndLogin(
         params,
         onAgentSessionChange,
       )
