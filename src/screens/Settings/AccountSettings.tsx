@@ -1,6 +1,7 @@
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 import {NativeStackScreenProps} from '@react-navigation/native-stack'
+import {VerusdRpcInterface} from 'verusd-rpc-ts-client'
 
 import {CommonNavigatorParams} from '#/lib/routes/types'
 import {useModalControls} from '#/state/modals'
@@ -38,6 +39,11 @@ export function AccountSettingsScreen({}: Props) {
 
   if (currentAccount?.type === 'dual') {
     console.log(currentAccount.id)
+    const rpcInterface = new VerusdRpcInterface(
+      'VRSC',
+      'https://api.verus.services',
+    )
+    console.log(rpcInterface.getInfo())
   } else {
     console.log('using the standard bsky account')
   }

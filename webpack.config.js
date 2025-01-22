@@ -21,6 +21,8 @@ module.exports = async function (env, argv) {
   config = withAlias(config, {
     'react-native$': 'react-native-web',
     'react-native-webview': 'react-native-web-webview',
+    stream: 'stream-browserify',
+    buffer: 'buffer',
   })
   config.module.rules = [
     ...(config.module.rules || []),
