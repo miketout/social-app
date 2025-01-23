@@ -28,6 +28,19 @@ module.exports = async function (env, argv) {
     ...(config.module.rules || []),
     reactNativeWebWebviewConfiguration,
   ]
+
+  // Add support for .cjs files
+  config.module.rules.push({
+    test: /\.cjs$/,
+    type: 'javascript/auto',
+    use: {
+      loader: 'babel-loader',
+      options: {
+        plugins: ['@babel/plugin-transform-modules-commonjs'],
+      },
+    },
+  })
+
   if (env.mode === 'development') {
     config.plugins.push(new ReactRefreshWebpackPlugin())
   } else {
