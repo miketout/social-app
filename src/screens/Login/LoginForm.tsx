@@ -173,7 +173,7 @@ export const LoginForm = ({
     <FormContainer testID="loginForm" titleText={<Trans>Sign in</Trans>}>
       <View>
         <TextField.LabelText>
-          <Trans>Hosting provider</Trans>
+          <Trans>Account provider</Trans>
         </TextField.LabelText>
         <HostingProvider
           serviceUrl={serviceUrl}
