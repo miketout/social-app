@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {
   ActivityIndicator,
   Keyboard,
@@ -13,6 +13,7 @@ import {
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
+import {DUAL_SERVICE, LOCAL_DEV_DUAL_SIGNING_SERVER} from '#/lib/constants'
 import {useRequestNotificationsPermission} from '#/lib/notifications/notifications'
 import {isNetworkError} from '#/lib/strings/errors'
 import {cleanError} from '#/lib/strings/errors'
@@ -29,6 +30,7 @@ import * as TextField from '#/components/forms/TextField'
 import {At_Stroke2_Corner0_Rounded as At} from '#/components/icons/At'
 import {Lock_Stroke2_Corner0_Rounded as Lock} from '#/components/icons/Lock'
 import {Ticket_Stroke2_Corner0_Rounded as Ticket} from '#/components/icons/Ticket'
+import {Link} from '#/components/Link'
 import {Loader} from '#/components/Loader'
 import {Text} from '#/components/Typography'
 import {FormContainer} from './FormContainer'
@@ -71,6 +73,51 @@ export const LoginForm = ({
   const requestNotificationsPermission = useRequestNotificationsPermission()
   const {setShowLoggedOut} = useLoggedOutViewControls()
   const setHasCheckedForStarterPack = useSetHasCheckedForStarterPack()
+  const isDualService = serviceUrl === DUAL_SERVICE
+
+  const [loginUri, setLoginUri] = useState<string>('')
+
+  useEffect(() => {
+    if (isDualService) {
+      // Get login URI here for the QR code and deeplink.
+      const fetchLoginUri = async () => {
+        try {
+          console.log('window.location.href')
+          const response = await fetch(
+            `${LOCAL_DEV_DUAL_SIGNING_SERVER}/api/v1/login/get-login-request`,
+          )
+
+          if (!response.ok) {
+            logger.warn('Failed to fetch login URI', {
+              error: response.statusText,
+            })
+            setError('Failed to fetch login URI from signing server')
+          }
+
+          const res = await response.json()
+
+          if (res.error) {
+            logger.warn('Failed to fetch login URI', {error: res.error})
+            setError('Failed to fetch login URI from signing server')
+          }
+
+          if (res.uri) {
+            setLoginUri(res.uri)
+            setError('')
+          } else {
+            logger.warn('Failed to fetch login URI', {error: 'No URI returned'})
+            setError('Failed to fetch login URI from signing server')
+          }
+        } catch (e: any) {
+          const errMsg = e.toString()
+          logger.warn('Failed to login', {error: errMsg})
+          setError(cleanError(errMsg))
+        }
+      }
+
+      fetchLoginUri()
+    }
+  }, [isDualService, setError])
 
   const onPressSelectService = React.useCallback(() => {
     Keyboard.dismiss()
@@ -181,79 +228,104 @@ export const LoginForm = ({
           onOpenDialog={onPressSelectService}
         />
       </View>
-      <View>
-        <TextField.LabelText>
-          <Trans>Account</Trans>
-        </TextField.LabelText>
-        <View style={[a.gap_sm]}>
-          <TextField.Root>
-            <TextField.Icon icon={At} />
-            <TextField.Input
-              testID="loginUsernameInput"
-              label={_(msg`Username or email address`)}
-              autoCapitalize="none"
-              autoFocus
-              autoCorrect={false}
-              autoComplete="username"
-              returnKeyType="next"
-              textContentType="username"
-              defaultValue={initialHandle || ''}
-              onChangeText={v => {
-                identifierValueRef.current = v
-              }}
-              onSubmitEditing={() => {
-                passwordRef.current?.focus()
-              }}
-              blurOnSubmit={false} // prevents flickering due to onSubmitEditing going to next field
-              editable={!isProcessing}
-              accessibilityHint={_(
-                msg`Input the username or email address you used at signup`,
-              )}
-            />
-          </TextField.Root>
-
-          <TextField.Root>
-            <TextField.Icon icon={Lock} />
-            <TextField.Input
-              testID="loginPasswordInput"
-              inputRef={passwordRef}
-              label={_(msg`Password`)}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="password"
-              returnKeyType="done"
-              enablesReturnKeyAutomatically={true}
-              secureTextEntry={true}
-              textContentType="password"
-              clearButtonMode="while-editing"
-              onChangeText={v => {
-                passwordValueRef.current = v
-              }}
-              onSubmitEditing={onPressNext}
-              blurOnSubmit={false} // HACK: https://github.com/facebook/react-native/issues/21911#issuecomment-558343069 Keyboard blur behavior is now handled in onSubmitEditing
-              editable={!isProcessing}
-              accessibilityHint={_(msg`Input your password`)}
-            />
-            <Button
-              testID="forgotPasswordButton"
-              onPress={onPressForgotPassword}
-              label={_(msg`Forgot password?`)}
-              accessibilityHint={_(msg`Opens password reset form`)}
-              variant="solid"
-              color="secondary"
-              style={[
-                a.rounded_sm,
-                // t.atoms.bg_contrast_100,
-                {marginLeft: 'auto', left: 6, padding: 6},
-                a.z_10,
-              ]}>
-              <ButtonText>
-                <Trans>Forgot?</Trans>
-              </ButtonText>
-            </Button>
-          </TextField.Root>
+      {isDualService ? (
+        <View>
+          <TextField.LabelText>
+            <Trans>Scan to sign in using your phone</Trans>
+          </TextField.LabelText>
+          <View style={[a.gap_sm]}>
+            <Link to={loginUri} label={'Link login'}>
+              <Button
+                testID="loginSameDeviceButton"
+                label={_(msg`Link login button`)}
+                accessibilityHint={_(
+                  msg`Links to signing in on the same device`,
+                )}
+                variant="solid"
+                color="primary"
+                size="large">
+                <ButtonText>
+                  <Trans>Sign in on same device</Trans>
+                </ButtonText>
+              </Button>
+            </Link>
+          </View>
         </View>
-      </View>
+      ) : (
+        <View>
+          <TextField.LabelText>
+            <Trans>Account</Trans>
+          </TextField.LabelText>
+          <View style={[a.gap_sm]}>
+            <TextField.Root>
+              <TextField.Icon icon={At} />
+              <TextField.Input
+                testID="loginUsernameInput"
+                label={_(msg`Username or email address`)}
+                autoCapitalize="none"
+                autoFocus
+                autoCorrect={false}
+                autoComplete="username"
+                returnKeyType="next"
+                textContentType="username"
+                defaultValue={initialHandle || ''}
+                onChangeText={v => {
+                  identifierValueRef.current = v
+                }}
+                onSubmitEditing={() => {
+                  passwordRef.current?.focus()
+                }}
+                blurOnSubmit={false} // prevents flickering due to onSubmitEditing going to next field
+                editable={!isProcessing}
+                accessibilityHint={_(
+                  msg`Input the username or email address you used at signup`,
+                )}
+              />
+            </TextField.Root>
+
+            <TextField.Root>
+              <TextField.Icon icon={Lock} />
+              <TextField.Input
+                testID="loginPasswordInput"
+                inputRef={passwordRef}
+                label={_(msg`Password`)}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="password"
+                returnKeyType="done"
+                enablesReturnKeyAutomatically={true}
+                secureTextEntry={true}
+                textContentType="password"
+                clearButtonMode="while-editing"
+                onChangeText={v => {
+                  passwordValueRef.current = v
+                }}
+                onSubmitEditing={onPressNext}
+                blurOnSubmit={false} // HACK: https://github.com/facebook/react-native/issues/21911#issuecomment-558343069 Keyboard blur behavior is now handled in onSubmitEditing
+                editable={!isProcessing}
+                accessibilityHint={_(msg`Input your password`)}
+              />
+              <Button
+                testID="forgotPasswordButton"
+                onPress={onPressForgotPassword}
+                label={_(msg`Forgot password?`)}
+                accessibilityHint={_(msg`Opens password reset form`)}
+                variant="solid"
+                color="secondary"
+                style={[
+                  a.rounded_sm,
+                  // t.atoms.bg_contrast_100,
+                  {marginLeft: 'auto', left: 6, padding: 6},
+                  a.z_10,
+                ]}>
+                <ButtonText>
+                  <Trans>Forgot?</Trans>
+                </ButtonText>
+              </Button>
+            </TextField.Root>
+          </View>
+        </View>
+      )}
       {isAuthFactorTokenNeeded && (
         <View>
           <TextField.LabelText>
