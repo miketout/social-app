@@ -39,6 +39,7 @@ export async function createAgentAndResume(
   // Restore either the standard BskyAppAgent or the DualAppAgent.
   if (storedAccount.type === 'dual') {
     const dualAgent = new DualAppAgent({service: storedAccount.service})
+    // Restore the dual session separately from standard session.
     dualAgent.dualSession.id = storedAccount.id
     agent = dualAgent
   } else {
@@ -348,11 +349,13 @@ export async function createDualAgentAndLogin(
     identifier,
     password,
     authFactorToken,
+    dualAuth,
   }: {
     service: string
     identifier: string
     password: string
     authFactorToken?: string
+    dualAuth?: string
   },
   onSessionChange: (
     agent: BskyAgent,
@@ -362,7 +365,7 @@ export async function createDualAgentAndLogin(
 ) {
   // Use same code as for the BskyAppAgent but instead create a DualAppAgent.
   const agent = new DualAppAgent({service})
-  agent.dualSession.id = 'temp-id'
+  agent.dualSession.id = dualAuth ? dualAuth : ''
   await agent.login({identifier, password, authFactorToken})
 
   const account = agentToSessionAccountOrThrow(agent)

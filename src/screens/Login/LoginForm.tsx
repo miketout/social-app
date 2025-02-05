@@ -12,15 +12,20 @@ import {
 } from '@atproto/api'
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
+import {primitives} from 'verusid-ts-client'
 
-import {DUAL_SERVICE, LOCAL_DEV_DUAL_SIGNING_SERVER} from '#/lib/constants'
+import {
+  DUAL_SERVICE,
+  LOCAL_DEV_DUAL_LOGIN_SERVER,
+  LOCAL_DEV_DUAL_SIGNING_SERVER,
+} from '#/lib/constants'
 import {useRequestNotificationsPermission} from '#/lib/notifications/notifications'
 import {isNetworkError} from '#/lib/strings/errors'
 import {cleanError} from '#/lib/strings/errors'
 import {createFullHandle} from '#/lib/strings/handles'
 import {logger} from '#/logger'
 import {useSetHasCheckedForStarterPack} from '#/state/preferences/used-starter-packs'
-import {useSessionApi} from '#/state/session'
+import {useSessionApi, useSessionDualApi} from '#/state/session'
 import {useLoggedOutViewControls} from '#/state/shell/logged-out'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -67,12 +72,14 @@ export const LoginForm = ({
   const identifierValueRef = useRef<string>(initialHandle || '')
   const passwordValueRef = useRef<string>('')
   const authFactorTokenValueRef = useRef<string>('')
+  const dualAuthValueRef = useRef<string>('')
   const passwordRef = useRef<TextInput>(null)
   const {_} = useLingui()
   const {login} = useSessionApi()
   const requestNotificationsPermission = useRequestNotificationsPermission()
   const {setShowLoggedOut} = useLoggedOutViewControls()
   const setHasCheckedForStarterPack = useSetHasCheckedForStarterPack()
+  const {idInterface} = useSessionDualApi()
   const isDualService = serviceUrl === DUAL_SERVICE
 
   const [loginUri, setLoginUri] = useState<string>('')
@@ -81,8 +88,8 @@ export const LoginForm = ({
     if (isDualService) {
       // Get login URI here for the QR code and deeplink.
       const fetchLoginUri = async () => {
+        setIsProcessing(true)
         try {
-          console.log('window.location.href')
           const response = await fetch(
             `${LOCAL_DEV_DUAL_SIGNING_SERVER}/api/v1/login/get-login-request`,
           )
@@ -113,6 +120,7 @@ export const LoginForm = ({
           logger.warn('Failed to login', {error: errMsg})
           setError(cleanError(errMsg))
         }
+        setIsProcessing(false)
       }
 
       fetchLoginUri()
@@ -132,6 +140,7 @@ export const LoginForm = ({
     const identifier = identifierValueRef.current.toLowerCase().trim()
     const password = passwordValueRef.current
     const authFactorToken = authFactorTokenValueRef.current
+    const dualAuth = dualAuthValueRef.current
 
     if (!identifier) {
       setError(_(msg`Please enter your username`))
@@ -175,6 +184,7 @@ export const LoginForm = ({
           identifier: fullIdent,
           password,
           authFactorToken: authFactorToken.trim(),
+          dualAuth: isDualService ? dualAuth : undefined,
         },
         'LoginForm',
       )
@@ -216,6 +226,58 @@ export const LoginForm = ({
     }
   }
 
+  // startDualLogin uses the deeplink and starts the checking for the login.
+  const startDualLogin = async () => {
+    if (isProcessing) {
+      return
+    }
+    checkForDualLogin()
+  }
+
+  // checkForDualLogin polls the login server for the login and passes the details to onPressNext.
+  const checkForDualLogin = async () => {
+    const pollInterval = 1000
+
+    const getLogin = async () => {
+      const response = await fetch(`${LOCAL_DEV_DUAL_LOGIN_SERVER}/get-login`)
+
+      // Occurs when the login server hasn't received a recent login.
+      if (response.status === 204) {
+        return
+      }
+
+      if (!response.ok) {
+        return
+      }
+
+      const res = await response.json()
+      const loginRes = new primitives.LoginConsentResponse(res)
+
+      try {
+        const isValid = await idInterface.verifyLoginConsentResponse(loginRes)
+        if (isValid) {
+          identifierValueRef.current = process.env.TEST_USERNAME
+          passwordValueRef.current = process.env.TEST_PASSWORD
+          dualAuthValueRef.current = loginRes.signing_id
+          onPressNext()
+        } else {
+          logger.warn('Failed to login due to invalid login response')
+          setError(_(msg`Unable to validate the dual login.`))
+        }
+      } catch (e: any) {
+        const errMsg = e.toString()
+        logger.warn('Failed to verify dual login response', {error: errMsg})
+        setError(cleanError(errMsg))
+      }
+
+      clearInterval(intervalRef)
+    }
+
+    const intervalRef = setInterval(() => {
+      getLogin()
+    }, pollInterval)
+  }
+
   return (
     <FormContainer testID="loginForm" titleText={<Trans>Sign in</Trans>}>
       <View>
@@ -243,10 +305,12 @@ export const LoginForm = ({
                 )}
                 variant="solid"
                 color="primary"
-                size="large">
+                size="large"
+                onPress={startDualLogin}>
                 <ButtonText>
                   <Trans>Sign in on same device</Trans>
                 </ButtonText>
+                {isProcessing && <ButtonIcon icon={Loader} />}
               </Button>
             </Link>
           </View>

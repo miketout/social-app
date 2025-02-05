@@ -1,3 +1,6 @@
+import {VerusdRpcInterface} from 'verusd-rpc-ts-client'
+import {VerusIdInterface} from 'verusid-ts-client'
+
 import {LogEvents} from '#/lib/statsig/statsig'
 import {PersistedAccount} from '#/state/persisted'
 
@@ -26,6 +29,7 @@ export type SessionApiContext = {
       identifier: string
       password: string
       authFactorToken?: string | undefined
+      dualAuth?: string | undefined
     },
     logContext: LogEvents['account:loggedIn']['logContext'],
   ) => Promise<void>
@@ -37,4 +41,9 @@ export type SessionApiContext = {
   ) => void
   resumeSession: (account: SessionAccount) => Promise<void>
   removeAccount: (account: SessionAccount) => void
+}
+
+export type SessionDualApiContext = {
+  rpcInterface: VerusdRpcInterface
+  idInterface: VerusIdInterface
 }
