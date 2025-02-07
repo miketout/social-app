@@ -1,7 +1,6 @@
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 import {NativeStackScreenProps} from '@react-navigation/native-stack'
-import {VerusdRpcInterface} from 'verusd-rpc-ts-client'
 
 import {CommonNavigatorParams} from '#/lib/routes/types'
 import {useModalControls} from '#/state/modals'
@@ -37,17 +36,6 @@ export function AccountSettingsScreen({}: Props) {
   const exportCarControl = useDialogControl()
   const deactivateAccountControl = useDialogControl()
 
-  if (currentAccount?.type === 'dual') {
-    console.log(currentAccount.id)
-    const rpcInterface = new VerusdRpcInterface(
-      'VRSC',
-      'https://api.verus.services',
-    )
-    console.log(rpcInterface.getInfo())
-  } else {
-    console.log('using the standard bsky account')
-  }
-
   return (
     <Layout.Screen>
       <Layout.Header.Outer>
@@ -61,6 +49,29 @@ export function AccountSettingsScreen({}: Props) {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
+          {currentAccount?.type === 'dual' && (
+            <SettingsList.Item>
+              <SettingsList.ItemIcon icon={AtIcon} />
+              {/* Uses the same flexbox solution as below. TODO: Update when the solution is found for it.*/}
+              <SettingsList.ItemText style={[a.flex_0]}>
+                <Trans>Identity</Trans>
+              </SettingsList.ItemText>
+              {currentAccount && (
+                <>
+                  <SettingsList.BadgeText style={[a.flex_1]}>
+                    {currentAccount.name ? (
+                      currentAccount.name + '@'
+                    ) : (
+                      <Trans>(no identity)</Trans>
+                    )}
+                  </SettingsList.BadgeText>
+                  {currentAccount.name && (
+                    <VerifiedIcon fill={t.palette.primary_500} size="md" />
+                  )}
+                </>
+              )}
+            </SettingsList.Item>
+          )}
           <SettingsList.Item>
             <SettingsList.ItemIcon icon={EnvelopeIcon} />
             {/* Tricky flexbox situation here: we want the email to truncate, but by default it will make the "Email" text wrap instead.

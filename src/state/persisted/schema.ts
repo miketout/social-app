@@ -37,7 +37,9 @@ const bskyAccountSchema = z.object({
  */
 const dualAccountSchema = bskyAccountSchema.extend({
   type: z.literal('dual'),
+  auth: z.string(),
   id: z.string(),
+  name: z.string(),
 })
 
 const accountSchema = z.discriminatedUnion('type', [

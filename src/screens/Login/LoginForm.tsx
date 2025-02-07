@@ -26,6 +26,7 @@ import {createFullHandle} from '#/lib/strings/handles'
 import {logger} from '#/logger'
 import {useSetHasCheckedForStarterPack} from '#/state/preferences/used-starter-packs'
 import {useSessionApi, useSessionDualApi} from '#/state/session'
+import {DualSession} from '#/state/session/types'
 import {useLoggedOutViewControls} from '#/state/shell/logged-out'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -35,7 +36,6 @@ import * as TextField from '#/components/forms/TextField'
 import {At_Stroke2_Corner0_Rounded as At} from '#/components/icons/At'
 import {Lock_Stroke2_Corner0_Rounded as Lock} from '#/components/icons/Lock'
 import {Ticket_Stroke2_Corner0_Rounded as Ticket} from '#/components/icons/Ticket'
-import {Link} from '#/components/Link'
 import {Loader} from '#/components/Loader'
 import {Text} from '#/components/Typography'
 import {FormContainer} from './FormContainer'
@@ -72,14 +72,14 @@ export const LoginForm = ({
   const identifierValueRef = useRef<string>(initialHandle || '')
   const passwordValueRef = useRef<string>('')
   const authFactorTokenValueRef = useRef<string>('')
-  const dualAuthValueRef = useRef<string>('')
+  const dualSessionValueRef = useRef<DualSession>({auth: '', id: '', name: ''})
   const passwordRef = useRef<TextInput>(null)
   const {_} = useLingui()
   const {login} = useSessionApi()
   const requestNotificationsPermission = useRequestNotificationsPermission()
   const {setShowLoggedOut} = useLoggedOutViewControls()
   const setHasCheckedForStarterPack = useSetHasCheckedForStarterPack()
-  const {idInterface} = useSessionDualApi()
+  const {rpcInterface, idInterface} = useSessionDualApi()
   const isDualService = serviceUrl === DUAL_SERVICE
 
   const [loginUri, setLoginUri] = useState<string>('')
@@ -140,7 +140,7 @@ export const LoginForm = ({
     const identifier = identifierValueRef.current.toLowerCase().trim()
     const password = passwordValueRef.current
     const authFactorToken = authFactorTokenValueRef.current
-    const dualAuth = dualAuthValueRef.current
+    const dualSession = dualSessionValueRef.current
 
     if (!identifier) {
       setError(_(msg`Please enter your username`))
@@ -184,7 +184,7 @@ export const LoginForm = ({
           identifier: fullIdent,
           password,
           authFactorToken: authFactorToken.trim(),
-          dualAuth: isDualService ? dualAuth : undefined,
+          dualSession: isDualService ? dualSession : undefined,
         },
         'LoginForm',
       )
@@ -231,6 +231,8 @@ export const LoginForm = ({
     if (isProcessing) {
       return
     }
+    // Open the deeplink on the same tab so that the current navigation stack is saved.
+    window.location.href = loginUri
     checkForDualLogin()
   }
 
@@ -258,11 +260,19 @@ export const LoginForm = ({
         if (isValid) {
           identifierValueRef.current = process.env.TEST_USERNAME
           passwordValueRef.current = process.env.TEST_PASSWORD
-          dualAuthValueRef.current = loginRes.signing_id
-          onPressNext()
+          const identity = await rpcInterface.getIdentity(loginRes.signing_id)
+          if (identity.result) {
+            dualSessionValueRef.current.name = identity.result.identity.name
+            onPressNext()
+          } else {
+            logger.warn('Failed to login due to invalid login response')
+            setError(_(msg`Unable to validate the dual login.`))
+          }
         } else {
-          logger.warn('Failed to login due to invalid login response')
-          setError(_(msg`Unable to validate the dual login.`))
+          logger.warn(
+            'Failed to login due to unknown signing ID in login response',
+          )
+          setError(_(msg`Unable to lookup dual login ID.`))
         }
       } catch (e: any) {
         const errMsg = e.toString()
@@ -290,32 +300,7 @@ export const LoginForm = ({
           onOpenDialog={onPressSelectService}
         />
       </View>
-      {isDualService ? (
-        <View>
-          <TextField.LabelText>
-            <Trans>Scan to sign in using your phone</Trans>
-          </TextField.LabelText>
-          <View style={[a.gap_sm]}>
-            <Link to={loginUri} label={'Link login'}>
-              <Button
-                testID="loginSameDeviceButton"
-                label={_(msg`Link login button`)}
-                accessibilityHint={_(
-                  msg`Links to signing in on the same device`,
-                )}
-                variant="solid"
-                color="primary"
-                size="large"
-                onPress={startDualLogin}>
-                <ButtonText>
-                  <Trans>Sign in on same device</Trans>
-                </ButtonText>
-                {isProcessing && <ButtonIcon icon={Loader} />}
-              </Button>
-            </Link>
-          </View>
-        </View>
-      ) : (
+      {!isDualService && (
         <View>
           <TextField.LabelText>
             <Trans>Account</Trans>
@@ -467,11 +452,15 @@ export const LoginForm = ({
           <Button
             testID="loginNextButton"
             label={_(msg`Next`)}
-            accessibilityHint={_(msg`Navigates to the next screen`)}
+            accessibilityHint={
+              isDualService
+                ? _(msg`Links to signing in on the same device`)
+                : _(msg`Navigates to the next screen`)
+            }
             variant="solid"
             color="primary"
             size="large"
-            onPress={onPressNext}>
+            onPress={isDualService ? startDualLogin : onPressNext}>
             <ButtonText>
               <Trans>Next</Trans>
             </ButtonText>

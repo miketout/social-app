@@ -19,7 +19,7 @@ import {
   configureModerationForAccount,
   configureModerationForGuest,
 } from './moderation'
-import {SessionAccount} from './types'
+import {DualSession, SessionAccount} from './types'
 import {isSessionExpired, isSignupQueued} from './util'
 
 export function createPublicAgent() {
@@ -40,7 +40,11 @@ export async function createAgentAndResume(
   if (storedAccount.type === 'dual') {
     const dualAgent = new DualAppAgent({service: storedAccount.service})
     // Restore the dual session separately from standard session.
-    dualAgent.dualSession.id = storedAccount.id
+    dualAgent.dualSession = {
+      auth: storedAccount.auth,
+      id: storedAccount.id,
+      name: storedAccount.name,
+    }
     agent = dualAgent
   } else {
     agent = new BskyAppAgent({service: storedAccount.service})
@@ -210,7 +214,9 @@ export function agentToSessionAccount(
     }
     return {
       type: 'dual',
+      auth: agent.dualSession.auth,
       id: agent.dualSession.id,
+      name: agent.dualSession.name,
       service: agent.service.toString(),
       did: agent.session.did,
       handle: agent.session.handle,
@@ -349,13 +355,13 @@ export async function createDualAgentAndLogin(
     identifier,
     password,
     authFactorToken,
-    dualAuth,
+    dualSession,
   }: {
     service: string
     identifier: string
     password: string
     authFactorToken?: string
-    dualAuth?: string
+    dualSession?: DualSession
   },
   onSessionChange: (
     agent: BskyAgent,
@@ -363,9 +369,12 @@ export async function createDualAgentAndLogin(
     event: AtpSessionEvent,
   ) => void,
 ) {
-  // Use same code as for the BskyAppAgent but instead create a DualAppAgent.
+  // Set the service to the Bluesky creating an authenticated agent.
+  service = BSKY_SERVICE
   const agent = new DualAppAgent({service})
-  agent.dualSession.id = dualAuth ? dualAuth : ''
+  if (dualSession) {
+    agent.dualSession = dualSession
+  }
   await agent.login({identifier, password, authFactorToken})
 
   const account = agentToSessionAccountOrThrow(agent)
@@ -374,14 +383,12 @@ export async function createDualAgentAndLogin(
   return agent.prepare(gates, moderation, onSessionChange)
 }
 
-type DualSession = {
-  id: string
-}
-
 // Not exported. Use factories above to create it.
 class DualAppAgent extends BskyAppAgent {
   public dualSession: DualSession = {
+    auth: '',
     id: '',
+    name: '',
   }
 
   persistSessionHandler: ((event: AtpSessionEvent) => void) | undefined =

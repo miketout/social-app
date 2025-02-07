@@ -24,7 +24,7 @@ export type {SessionAccount} from '#/state/session/types'
 import {VerusdRpcInterface} from 'verusd-rpc-ts-client'
 import {VerusIdInterface} from 'verusid-ts-client'
 
-import {BSKY_SERVICE, DUAL_SERVICE, DUAL_SERVICE_ID} from '#/lib/constants'
+import {DUAL_SERVICE, DUAL_SERVICE_ID} from '#/lib/constants'
 import {
   SessionAccount,
   SessionApiContext,
@@ -112,8 +112,6 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
       let agent: BskyAppAgent
       let account: SessionAccount
       if (params.service === DUAL_SERVICE) {
-        // TEMP: Set the service to the bluesky one so it can login.
-        params.service = BSKY_SERVICE
         ;({agent, account} = await createDualAgentAndLogin(
           params,
           onAgentSessionChange,

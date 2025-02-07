@@ -29,7 +29,7 @@ export type SessionApiContext = {
       identifier: string
       password: string
       authFactorToken?: string | undefined
-      dualAuth?: string | undefined
+      dualSession?: DualSession
     },
     logContext: LogEvents['account:loggedIn']['logContext'],
   ) => Promise<void>
@@ -46,4 +46,10 @@ export type SessionApiContext = {
 export type SessionDualApiContext = {
   rpcInterface: VerusdRpcInterface
   idInterface: VerusIdInterface
+}
+
+export type DualSession = {
+  auth: string
+  id: string
+  name: string
 }
