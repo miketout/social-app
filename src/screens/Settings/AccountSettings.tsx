@@ -49,7 +49,7 @@ export function AccountSettingsScreen({}: Props) {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
-          {currentAccount?.type === 'dual' && (
+          {currentAccount?.type === 'vsky' && (
             <SettingsList.Item>
               <SettingsList.ItemIcon icon={AtIcon} />
               {/* Uses the same flexbox solution as below. TODO: Update when the solution is found for it.*/}

@@ -15,9 +15,9 @@ import {useLingui} from '@lingui/react'
 import {primitives} from 'verusid-ts-client'
 
 import {
-  DUAL_SERVICE,
-  LOCAL_DEV_DUAL_LOGIN_SERVER,
-  LOCAL_DEV_DUAL_SIGNING_SERVER,
+  LOCAL_DEV_VSKY_LOGIN_SERVER,
+  LOCAL_DEV_VSKY_SIGNING_SERVER,
+  VSKY_SERVICE,
 } from '#/lib/constants'
 import {useRequestNotificationsPermission} from '#/lib/notifications/notifications'
 import {isNetworkError} from '#/lib/strings/errors'
@@ -25,8 +25,8 @@ import {cleanError} from '#/lib/strings/errors'
 import {createFullHandle} from '#/lib/strings/handles'
 import {logger} from '#/logger'
 import {useSetHasCheckedForStarterPack} from '#/state/preferences/used-starter-packs'
-import {useSessionApi, useSessionDualApi} from '#/state/session'
-import {DualSession} from '#/state/session/types'
+import {useSessionApi, useSessionVskyApi} from '#/state/session'
+import {VskySession} from '#/state/session/types'
 import {useLoggedOutViewControls} from '#/state/shell/logged-out'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -72,26 +72,26 @@ export const LoginForm = ({
   const identifierValueRef = useRef<string>(initialHandle || '')
   const passwordValueRef = useRef<string>('')
   const authFactorTokenValueRef = useRef<string>('')
-  const dualSessionValueRef = useRef<DualSession>({auth: '', id: '', name: ''})
+  const vskySessionValueRef = useRef<VskySession>({auth: '', id: '', name: ''})
   const passwordRef = useRef<TextInput>(null)
   const {_} = useLingui()
   const {login} = useSessionApi()
   const requestNotificationsPermission = useRequestNotificationsPermission()
   const {setShowLoggedOut} = useLoggedOutViewControls()
   const setHasCheckedForStarterPack = useSetHasCheckedForStarterPack()
-  const {rpcInterface, idInterface} = useSessionDualApi()
-  const isDualService = serviceUrl === DUAL_SERVICE
+  const {rpcInterface, idInterface} = useSessionVskyApi()
+  const isVskyService = serviceUrl === VSKY_SERVICE
 
   const [loginUri, setLoginUri] = useState<string>('')
 
   useEffect(() => {
-    if (isDualService) {
+    if (isVskyService) {
       // Get login URI here for the QR code and deeplink.
       const fetchLoginUri = async () => {
         setIsProcessing(true)
         try {
           const response = await fetch(
-            `${LOCAL_DEV_DUAL_SIGNING_SERVER}/api/v1/login/get-login-request`,
+            `${LOCAL_DEV_VSKY_SIGNING_SERVER}/api/v1/login/get-login-request`,
           )
 
           if (!response.ok) {
@@ -125,7 +125,7 @@ export const LoginForm = ({
 
       fetchLoginUri()
     }
-  }, [isDualService, setError])
+  }, [isVskyService, setError])
 
   const onPressSelectService = React.useCallback(() => {
     Keyboard.dismiss()
@@ -140,7 +140,7 @@ export const LoginForm = ({
     const identifier = identifierValueRef.current.toLowerCase().trim()
     const password = passwordValueRef.current
     const authFactorToken = authFactorTokenValueRef.current
-    const dualSession = dualSessionValueRef.current
+    const vskySession = vskySessionValueRef.current
 
     if (!identifier) {
       setError(_(msg`Please enter your username`))
@@ -184,7 +184,7 @@ export const LoginForm = ({
           identifier: fullIdent,
           password,
           authFactorToken: authFactorToken.trim(),
-          dualSession: isDualService ? dualSession : undefined,
+          vskySession: isVskyService ? vskySession : undefined,
         },
         'LoginForm',
       )
@@ -226,22 +226,22 @@ export const LoginForm = ({
     }
   }
 
-  // startDualLogin uses the deeplink and starts the checking for the login.
-  const startDualLogin = async () => {
+  // startVskyLogin uses the deeplink and starts the checking for the login.
+  const startVskyLogin = async () => {
     if (isProcessing) {
       return
     }
     // Open the deeplink on the same tab so that the current navigation stack is saved.
     window.location.href = loginUri
-    checkForDualLogin()
+    checkForVskyLogin()
   }
 
-  // checkForDualLogin polls the login server for the login and passes the details to onPressNext.
-  const checkForDualLogin = async () => {
+  // checkForVskyLogin polls the login server for the login and passes the details to onPressNext.
+  const checkForVskyLogin = async () => {
     const pollInterval = 1000
 
     const getLogin = async () => {
-      const response = await fetch(`${LOCAL_DEV_DUAL_LOGIN_SERVER}/get-login`)
+      const response = await fetch(`${LOCAL_DEV_VSKY_LOGIN_SERVER}/get-login`)
 
       // Occurs when the login server hasn't received a recent login.
       if (response.status === 204) {
@@ -262,21 +262,21 @@ export const LoginForm = ({
           passwordValueRef.current = process.env.TEST_PASSWORD
           const identity = await rpcInterface.getIdentity(loginRes.signing_id)
           if (identity.result) {
-            dualSessionValueRef.current.name = identity.result.identity.name
+            vskySessionValueRef.current.name = identity.result.identity.name
             onPressNext()
           } else {
             logger.warn('Failed to login due to invalid login response')
-            setError(_(msg`Unable to validate the dual login.`))
+            setError(_(msg`Unable to validate the Verisky login.`))
           }
         } else {
           logger.warn(
             'Failed to login due to unknown signing ID in login response',
           )
-          setError(_(msg`Unable to lookup dual login ID.`))
+          setError(_(msg`Unable to lookup Verisky login ID.`))
         }
       } catch (e: any) {
         const errMsg = e.toString()
-        logger.warn('Failed to verify dual login response', {error: errMsg})
+        logger.warn('Failed to verify Verisky login response', {error: errMsg})
         setError(cleanError(errMsg))
       }
 
@@ -300,7 +300,7 @@ export const LoginForm = ({
           onOpenDialog={onPressSelectService}
         />
       </View>
-      {!isDualService && (
+      {!isVskyService && (
         <View>
           <TextField.LabelText>
             <Trans>Account</Trans>
@@ -453,14 +453,14 @@ export const LoginForm = ({
             testID="loginNextButton"
             label={_(msg`Next`)}
             accessibilityHint={
-              isDualService
+              isVskyService
                 ? _(msg`Links to signing in on the same device`)
                 : _(msg`Navigates to the next screen`)
             }
             variant="solid"
             color="primary"
             size="large"
-            onPress={isDualService ? startDualLogin : onPressNext}>
+            onPress={isVskyService ? startVskyLogin : onPressNext}>
             <ButtonText>
               <Trans>Next</Trans>
             </ButtonText>

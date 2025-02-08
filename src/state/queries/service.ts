@@ -1,7 +1,7 @@
 import {BskyAgent} from '@atproto/api'
 import {useQuery} from '@tanstack/react-query'
 
-import {BSKY_SERVICE, DUAL_SERVICE} from '#/lib/constants'
+import {BSKY_SERVICE, VSKY_SERVICE} from '#/lib/constants'
 
 const RQKEY_ROOT = 'service'
 export const RQKEY = (serviceUrl: string) => [RQKEY_ROOT, serviceUrl]
@@ -9,8 +9,8 @@ export const RQKEY = (serviceUrl: string) => [RQKEY_ROOT, serviceUrl]
 export function useServiceQuery(serviceUrl: string) {
   let url = serviceUrl
 
-  // Redirect the dual service to the Bluesky service that is uses.
-  if (serviceUrl === DUAL_SERVICE) {
+  // Redirect the Verisky service to the Bluesky service that is uses.
+  if (serviceUrl === VSKY_SERVICE) {
     url = BSKY_SERVICE
   }
 

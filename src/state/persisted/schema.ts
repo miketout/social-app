@@ -35,8 +35,8 @@ const bskyAccountSchema = z.object({
 /**
  * An second account with an ID persisted to storage. It extends the existing Bluesky account in order to stay compatible with it.
  */
-const dualAccountSchema = bskyAccountSchema.extend({
-  type: z.literal('dual'),
+const vskyAccountSchema = bskyAccountSchema.extend({
+  type: z.literal('vsky'),
   auth: z.string(),
   id: z.string(),
   name: z.string(),
@@ -44,7 +44,7 @@ const dualAccountSchema = bskyAccountSchema.extend({
 
 const accountSchema = z.discriminatedUnion('type', [
   bskyAccountSchema,
-  dualAccountSchema,
+  vskyAccountSchema,
 ])
 
 export type PersistedAccount = z.infer<typeof accountSchema>
@@ -62,14 +62,14 @@ const currentBskyAccountSchema = bskyAccountSchema.extend({
   handle: z.string().optional(),
 })
 
-const currentDualAccountSchema = dualAccountSchema.extend({
+const currentVskyAccountSchema = vskyAccountSchema.extend({
   service: z.string().optional(),
   handle: z.string().optional(),
 })
 
 const currentAccountSchema = z.discriminatedUnion('type', [
   currentBskyAccountSchema,
-  currentDualAccountSchema,
+  currentVskyAccountSchema,
 ])
 
 export type PersistedCurrentAccount = z.infer<typeof currentAccountSchema>

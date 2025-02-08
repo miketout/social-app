@@ -4,7 +4,11 @@ import {useWindowDimensions} from 'react-native'
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
+<<<<<<< HEAD
 import {BSKY_SERVICE} from '#/lib/constants'
+=======
+import {BSKY_SERVICE, VSKY_SERVICE} from '#/lib/constants'
+>>>>>>> 5d485476 (Rename dual to verisky and vsky.)
 import * as persisted from '#/state/persisted'
 import {useSession} from '#/state/session'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'

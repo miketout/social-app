@@ -13,7 +13,7 @@ import {
   createAgentAndCreateAccount,
   createAgentAndLogin,
   createAgentAndResume,
-  createDualAgentAndLogin,
+  createVskyAgentAndLogin,
   sessionAccountToSession,
 } from './agent'
 import {getInitialState, reducer} from './reducer'
@@ -24,12 +24,12 @@ export type {SessionAccount} from '#/state/session/types'
 import {VerusdRpcInterface} from 'verusd-rpc-ts-client'
 import {VerusIdInterface} from 'verusid-ts-client'
 
-import {DUAL_SERVICE, DUAL_SERVICE_ID} from '#/lib/constants'
+import {VSKY_SERVICE, VSKY_SERVICE_ID} from '#/lib/constants'
 import {
   SessionAccount,
   SessionApiContext,
-  SessionDualApiContext,
   SessionStateContext,
+  SessionVskyApiContext,
 } from '#/state/session/types'
 
 const StateContext = React.createContext<SessionStateContext>({
@@ -49,9 +49,9 @@ const ApiContext = React.createContext<SessionApiContext>({
   removeAccount: () => {},
 })
 
-const DualApiContext = React.createContext<SessionDualApiContext>({
-  rpcInterface: new VerusdRpcInterface(DUAL_SERVICE_ID, DUAL_SERVICE),
-  idInterface: new VerusIdInterface(DUAL_SERVICE_ID, DUAL_SERVICE),
+const VskyApiContext = React.createContext<SessionVskyApiContext>({
+  rpcInterface: new VerusdRpcInterface(VSKY_SERVICE_ID, VSKY_SERVICE),
+  idInterface: new VerusIdInterface(VSKY_SERVICE_ID, VSKY_SERVICE),
 })
 
 export function Provider({children}: React.PropsWithChildren<{}>) {
@@ -108,11 +108,11 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
       addSessionDebugLog({type: 'method:start', method: 'login'})
       const signal = cancelPendingTask()
 
-      // Choose to login using the dual service or an atproto provider based on the service url.
+      // Choose to login using the Verisky service or an atproto provider based on the service url.
       let agent: BskyAppAgent
       let account: SessionAccount
-      if (params.service === DUAL_SERVICE) {
-        ;({agent, account} = await createDualAgentAndLogin(
+      if (params.service === VSKY_SERVICE) {
+        ;({agent, account} = await createVskyAgentAndLogin(
           params,
           onAgentSessionChange,
         ))
@@ -284,10 +284,10 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
     ],
   )
 
-  const dualApi = React.useMemo(
+  const vskyApi = React.useMemo(
     () => ({
-      rpcInterface: new VerusdRpcInterface(DUAL_SERVICE_ID, DUAL_SERVICE),
-      idInterface: new VerusIdInterface(DUAL_SERVICE_ID, DUAL_SERVICE),
+      rpcInterface: new VerusdRpcInterface(VSKY_SERVICE_ID, VSKY_SERVICE),
+      idInterface: new VerusIdInterface(VSKY_SERVICE_ID, VSKY_SERVICE),
     }),
     [],
   )
@@ -313,9 +313,9 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
     <AgentContext.Provider value={agent}>
       <StateContext.Provider value={stateContext}>
         <ApiContext.Provider value={api}>
-          <DualApiContext.Provider value={dualApi}>
+          <VskyApiContext.Provider value={vskyApi}>
             {children}
-          </DualApiContext.Provider>
+          </VskyApiContext.Provider>
         </ApiContext.Provider>
       </StateContext.Provider>
     </AgentContext.Provider>
@@ -342,8 +342,8 @@ export function useSessionApi() {
   return React.useContext(ApiContext)
 }
 
-export function useSessionDualApi() {
-  return React.useContext(DualApiContext)
+export function useSessionVskyApi() {
+  return React.useContext(VskyApiContext)
 }
 
 export function useRequireAuth() {

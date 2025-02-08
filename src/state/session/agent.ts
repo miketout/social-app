@@ -19,7 +19,7 @@ import {
   configureModerationForAccount,
   configureModerationForGuest,
 } from './moderation'
-import {DualSession, SessionAccount} from './types'
+import {SessionAccount, VskySession} from './types'
 import {isSessionExpired, isSignupQueued} from './util'
 
 export function createPublicAgent() {
@@ -36,16 +36,16 @@ export async function createAgentAndResume(
   ) => void,
 ) {
   let agent: BskyAppAgent
-  // Restore either the standard BskyAppAgent or the DualAppAgent.
-  if (storedAccount.type === 'dual') {
-    const dualAgent = new DualAppAgent({service: storedAccount.service})
-    // Restore the dual session separately from standard session.
-    dualAgent.dualSession = {
+  // Restore either the standard BskyAppAgent or the VskyAppAgent.
+  if (storedAccount.type === 'vsky') {
+    const vskyAppAgent = new VskyAppAgent({service: storedAccount.service})
+    // Restore the Verisky session separately from standard session.
+    vskyAppAgent.vskySession = {
       auth: storedAccount.auth,
       id: storedAccount.id,
       name: storedAccount.name,
     }
-    agent = dualAgent
+    agent = vskyAppAgent
   } else {
     agent = new BskyAppAgent({service: storedAccount.service})
   }
@@ -208,15 +208,15 @@ export function agentToSessionAccountOrThrow(agent: BskyAgent): SessionAccount {
 export function agentToSessionAccount(
   agent: BskyAgent,
 ): SessionAccount | undefined {
-  if (agent instanceof DualAppAgent) {
+  if (agent instanceof VskyAppAgent) {
     if (!agent.session) {
       return undefined
     }
     return {
-      type: 'dual',
-      auth: agent.dualSession.auth,
-      id: agent.dualSession.id,
-      name: agent.dualSession.name,
+      type: 'vsky',
+      auth: agent.vskySession.auth,
+      id: agent.vskySession.id,
+      name: agent.vskySession.name,
       service: agent.service.toString(),
       did: agent.session.did,
       handle: agent.session.handle,
@@ -349,19 +349,19 @@ class BskyAppAgent extends BskyAgent {
 
 export type {BskyAppAgent}
 
-export async function createDualAgentAndLogin(
+export async function createVskyAgentAndLogin(
   {
     service,
     identifier,
     password,
     authFactorToken,
-    dualSession,
+    vskySession,
   }: {
     service: string
     identifier: string
     password: string
     authFactorToken?: string
-    dualSession?: DualSession
+    vskySession?: VskySession
   },
   onSessionChange: (
     agent: BskyAgent,
@@ -371,9 +371,9 @@ export async function createDualAgentAndLogin(
 ) {
   // Set the service to the Bluesky creating an authenticated agent.
   service = BSKY_SERVICE
-  const agent = new DualAppAgent({service})
-  if (dualSession) {
-    agent.dualSession = dualSession
+  const agent = new VskyAppAgent({service})
+  if (vskySession) {
+    agent.vskySession = vskySession
   }
   await agent.login({identifier, password, authFactorToken})
 
@@ -384,8 +384,8 @@ export async function createDualAgentAndLogin(
 }
 
 // Not exported. Use factories above to create it.
-class DualAppAgent extends BskyAppAgent {
-  public dualSession: DualSession = {
+class VskyAppAgent extends BskyAppAgent {
+  public vskySession: VskySession = {
     auth: '',
     id: '',
     name: '',
@@ -432,4 +432,4 @@ class DualAppAgent extends BskyAppAgent {
   }
 }
 
-export type {DualAppAgent}
+export type {VskyAppAgent}

@@ -29,7 +29,7 @@ export type SessionApiContext = {
       identifier: string
       password: string
       authFactorToken?: string | undefined
-      dualSession?: DualSession
+      vskySession?: VskySession
     },
     logContext: LogEvents['account:loggedIn']['logContext'],
   ) => Promise<void>
@@ -43,12 +43,12 @@ export type SessionApiContext = {
   removeAccount: (account: SessionAccount) => void
 }
 
-export type SessionDualApiContext = {
+export type SessionVskyApiContext = {
   rpcInterface: VerusdRpcInterface
   idInterface: VerusIdInterface
 }
 
-export type DualSession = {
+export type VskySession = {
   auth: string
   id: string
   name: string
