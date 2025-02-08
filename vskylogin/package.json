@@ -1,8 +1,7 @@
 {
-  "name": "veriskylogin",
+  "name": "vskylogin",
   "version": "0.0.0",
   "main": "index.ts",
-  "license": "MIT",
   "scripts": {
     "dev": "tsx --watch src/index.ts",
     "build": "tsc",
