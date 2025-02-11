@@ -4,7 +4,7 @@ import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {msg} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
-import {DEFAULT_SERVICE} from '#/lib/constants'
+import {DEFAULT_SERVICE, VSKY_SERVICE} from '#/lib/constants'
 import {logger} from '#/logger'
 import {useServiceQuery} from '#/state/queries/service'
 import {SessionAccount, useSession} from '#/state/session'
@@ -58,7 +58,11 @@ export const Login = ({onPressBack}: {onPressBack: () => void}) => {
 
   const onSelectAccount = (account?: SessionAccount) => {
     if (account?.service) {
-      setServiceUrl(account.service)
+      if (account.type === 'vsky') {
+        setServiceUrl(VSKY_SERVICE)
+      } else {
+        setServiceUrl(account.service)
+      }
     }
     setInitialHandle(account?.handle || '')
     setCurrentForm(Forms.Login)
@@ -95,7 +99,7 @@ export const Login = ({onPressBack}: {onPressBack: () => void}) => {
   switch (currentForm) {
     case Forms.Login:
       title = _(msg`Sign in`)
-      description = _(msg`Enter your username and password`)
+      description = _(msg`Choose your account provider`)
       content = (
         <LoginForm
           error={error}

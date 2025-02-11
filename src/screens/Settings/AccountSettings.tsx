@@ -49,6 +49,29 @@ export function AccountSettingsScreen({}: Props) {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
+          {currentAccount?.type === 'vsky' && (
+            <SettingsList.Item>
+              <SettingsList.ItemIcon icon={AtIcon} />
+              {/* Uses the same flexbox solution as below. TODO: Update when the solution is found for it.*/}
+              <SettingsList.ItemText style={[a.flex_0]}>
+                <Trans>Identity</Trans>
+              </SettingsList.ItemText>
+              {currentAccount && (
+                <>
+                  <SettingsList.BadgeText style={[a.flex_1]}>
+                    {currentAccount.name ? (
+                      currentAccount.name + '@'
+                    ) : (
+                      <Trans>(no identity)</Trans>
+                    )}
+                  </SettingsList.BadgeText>
+                  {currentAccount.name && (
+                    <VerifiedIcon fill={t.palette.primary_500} size="md" />
+                  )}
+                </>
+              )}
+            </SettingsList.Item>
+          )}
           <SettingsList.Item>
             <SettingsList.ItemIcon icon={EnvelopeIcon} />
             {/* Tricky flexbox situation here: we want the email to truncate, but by default it will make the "Email" text wrap instead.

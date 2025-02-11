@@ -2,6 +2,7 @@ const createExpoWebpackConfigAsync = require('@expo/webpack-config')
 const {withAlias} = require('@expo/webpack-config/addons')
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
 const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer')
+const webpack = require('webpack')
 
 const GENERATE_STATS = process.env.EXPO_PUBLIC_GENERATE_STATS === '1'
 const OPEN_ANALYZER = process.env.EXPO_PUBLIC_OPEN_ANALYZER === '1'
@@ -21,11 +22,27 @@ module.exports = async function (env, argv) {
   config = withAlias(config, {
     'react-native$': 'react-native-web',
     'react-native-webview': 'react-native-web-webview',
+    stream: 'stream-browserify',
+    buffer: 'buffer',
+    crypto: 'crypto-browserify',
   })
   config.module.rules = [
     ...(config.module.rules || []),
     reactNativeWebWebviewConfiguration,
   ]
+
+  // Add support for .cjs files
+  config.module.rules.push({
+    test: /\.cjs$/,
+    type: 'javascript/auto',
+    use: {
+      loader: 'babel-loader',
+      options: {
+        plugins: ['@babel/plugin-transform-modules-commonjs'],
+      },
+    },
+  })
+
   if (env.mode === 'development') {
     config.plugins.push(new ReactRefreshWebpackPlugin())
   } else {
@@ -44,5 +61,13 @@ module.exports = async function (env, argv) {
       }),
     )
   }
+
+  config.plugins = [
+    ...config.plugins,
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+    }),
+  ]
+
   return config
 }
