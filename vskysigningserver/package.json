@@ -8,7 +8,6 @@
     "dev": "tsx --watch src/local_server.ts",
     "build": "tsc",
     "compile": "tsc",
-    "prepare": "yarn run compile",
     "pretest": "yarn run compile",
     "posttest": "yarn run lint",
     "test": "jest"

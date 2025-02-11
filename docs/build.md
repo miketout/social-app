@@ -19,7 +19,7 @@ You're all set!
   - `yarn dev`
 - Signing Server (vskysigningserver)
   - Enter the vskysigningserver directory
-  - `yarn install`
+  - `yarn`
   - Setup the `.env` file.
   - `yarn dev`
 
