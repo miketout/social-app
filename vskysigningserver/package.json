@@ -2,15 +2,12 @@
   "name": "vskysigningserver",
   "version": "0.1.0",
   "bin": {
-    "verus-request-server": "bin/verus-request-server.js"
+    "vsky-signing-server": "bin/vsky-signing-server.js"
   },
   "scripts": {
     "dev": "tsx --watch src/local_server.ts",
     "build": "tsc",
-    "lint": "gts lint",
-    "clean": "gts clean",
     "compile": "tsc",
-    "fix": "gts fix",
     "prepare": "yarn run compile",
     "pretest": "yarn run compile",
     "posttest": "yarn run lint",
