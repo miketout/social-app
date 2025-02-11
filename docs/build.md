@@ -7,6 +7,22 @@
 
 You're all set!
 
+## Running the Verisky Web App
+
+- Web App
+  - As above.
+  - Remember to setup the `.env` file.
+    - `TEST_USERNAME` and `TEST_PASSWORD` are needed to test the login with Bluesky.
+- Login Server (vskylogin)
+  - Enter the vskylogin directory
+  - `yarn`
+  - `yarn dev`
+- Signing Server (vskysigningserver)
+  - Enter the vskysigningserver directory
+  - `yarn install`
+  - Setup the `.env` file.
+  - `yarn dev`
+
 ## iOS/Android Build
 
 ### Native Environment Setup
