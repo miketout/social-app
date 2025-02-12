@@ -147,7 +147,7 @@ export function AccountSettingsScreen({}: Props) {
           </SettingsList.PressableItem>
           <SettingsList.PressableItem
             label={_(msg`Handle`)}
-            accessibilityHint={_(msg`Open change handle dialog`)}
+            accessibilityHint={_(msg`Opens change handle dialog`)}
             onPress={() => changeHandleControl.open()}>
             <SettingsList.ItemIcon icon={AtIcon} />
             <SettingsList.ItemText>
