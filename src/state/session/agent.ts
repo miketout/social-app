@@ -180,7 +180,7 @@ export async function createAgentAndCreateAccount(
       })
     } catch (e: any) {
       logger.error(e, {
-        context: `session: createAgentAndCreateAccount failed to save personal details and feeds`,
+        message: `session: createAgentAndCreateAccount failed to save personal details and feeds`,
       })
     }
   } else {
@@ -191,7 +191,7 @@ export async function createAgentAndCreateAccount(
     // snooze first prompt after signup, defer to next prompt
     snoozeEmailConfirmationPrompt()
   } catch (e: any) {
-    logger.error(e, {context: `session: failed snoozeEmailConfirmationPrompt`})
+    logger.error(e, {message: `session: failed snoozeEmailConfirmationPrompt`})
   }
 
   return agent.prepare(gates, moderation, onSessionChange)
