@@ -1,6 +1,6 @@
 # Credential Demo
 
-## Add Credentials to the Contentmulitmap 
+## Add Credentials to the Contentmultimap 
 
 The identity's contentmultimap needs credentials, including a username and password, to be able to log in.
 
