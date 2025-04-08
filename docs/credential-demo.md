@@ -7,7 +7,7 @@ The identity's contentmultimap needs credentials, including a username and passw
 ### 1. Generate the encryption and viewing keys.
 
 Use `z_getencryptionaddress` with the z-address from the identity, and set `fromID` and `toID` to the identity.
-```json
+```bash
 ./verus z_getencryptionaddress '{
     "address": "z-address",
     "fromid": "identity@",
@@ -20,7 +20,7 @@ Save the `address` (encryption address) and `extendedviewingkey` for later.
 ### 2. Encrypt the credentials.
 
 Use `signdata` to encrypt the credentials. The credentials should be formatted as follows.
-```json
+```bash
 "vrsc::data.type.object.credential":{
   "version": 1,
   "credentialKey": "",
@@ -36,7 +36,7 @@ For the credential, the fields need to be set as follows
 * **scopes**: The i-address or name of the identity **signing** the login requests
 
 For encrypting a username, this would look as follows.
-```json
+```bash
 ./verus signdata '{
   "address":"identity@",
   "vdxfdata": {
@@ -52,7 +52,7 @@ For encrypting a username, this would look as follows.
 ```
 
 For encrypting a password, this would look as follows.
-```json
+```bash
 ./verus signdata '{
   "address":"identity@",
   "vdxfdata": {
@@ -76,14 +76,14 @@ Perform encryption to get both the username and password data descriptors.
 Now you should have the `extendedviewingkey`, and data descriptors for both the **username** and **password**. 
 
 Generate the `vrsc::identity.credentials` key hashed with the `extendedviewingkey` using `getvdxfid`.
-```json
+```bash
 ./verus getvdxfid vrsc::identity.credentials '{"vdxfkey":"extendedviewingkey"}'
 ```
 
 From the resulting JSON, save the `vdxfid` value under the `vdxfid` key. Now with the `vdxfid` value and the data descriptors,
 use `updateidentity` with the following format to add these to the contentmultimap.
 
-```json
+```bash
 ./verus updateidentity '{     
   "name": "identity@",
   "contentmultimap": {
@@ -100,11 +100,11 @@ use `updateidentity` with the following format to add these to the contentmultim
 ```
 
 With the data descriptors, the command should look similar to the following.
-```json
+```bash
 ./verus updateidentity '{     
   "name": "identity@",
   "contentmultimap": {
-    "iGyAsYou1KCBknpTRMtFfKusvZPmaHENE3": [
+    "iGyAsYou1KCBkspTRMtFfKusvZPmwHENE3": [
         {
             "vrsc::data.type.object.datadescriptor": {
               "version": 1,
