@@ -1,4 +1,4 @@
-# Verisky Signing Server
+# VeruSky Signing Server
 
 This is for signing login requests.
 

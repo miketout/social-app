@@ -24,7 +24,6 @@ import {VerusdRpcInterface} from 'verusd-rpc-ts-client'
 import {VerusIdInterface} from 'verusid-ts-client'
 
 import {VSKY_SERVICE, VSKY_SERVICE_ID} from '#/lib/constants'
-
 import {logger} from '#/logger'
 import {
   type SessionAccount,
@@ -109,7 +108,7 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
       addSessionDebugLog({type: 'method:start', method: 'login'})
       const signal = cancelPendingTask()
 
-      // Choose to login using the Verisky service or an atproto provider based on the service url.
+      // Choose to login using the VeruSky service or an atproto provider based on the service url.
       let agent: BskyAppAgent
       let account: SessionAccount
       if (params.service === VSKY_SERVICE) {

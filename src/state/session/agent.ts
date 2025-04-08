@@ -1,4 +1,8 @@
-import {AtpSessionData, AtpSessionEvent, BskyAgent} from '@atproto/api'
+import {
+  type AtpSessionData,
+  type AtpSessionEvent,
+  BskyAgent,
+} from '@atproto/api'
 import {TID} from '@atproto/common-web'
 
 import {networkRetry} from '#/lib/async/retry'
@@ -19,7 +23,7 @@ import {
   configureModerationForAccount,
   configureModerationForGuest,
 } from './moderation'
-import {SessionAccount, VskySession} from './types'
+import {type SessionAccount, type VskySession} from './types'
 import {isSessionExpired, isSignupQueued} from './util'
 
 export function createPublicAgent() {
@@ -39,7 +43,7 @@ export async function createAgentAndResume(
   // Restore either the standard BskyAppAgent or the VskyAppAgent.
   if (storedAccount.type === 'vsky') {
     const vskyAppAgent = new VskyAppAgent({service: storedAccount.service})
-    // Restore the Verisky session separately from standard session.
+    // Restore the VeruSky session separately from standard session.
     vskyAppAgent.vskySession = {
       auth: storedAccount.auth,
       id: storedAccount.id,

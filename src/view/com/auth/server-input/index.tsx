@@ -133,8 +133,8 @@ function DialogInner({
           label="Preferences"
           values={[fixedOption]}
           onChange={values => setFixedOption(values[0])}>
-          <ToggleButton.Button name={VSKY_SERVICE} label={_(msg`Verisky`)}>
-            <ToggleButton.ButtonText>{_(msg`Verisky`)}</ToggleButton.ButtonText>
+          <ToggleButton.Button name={VSKY_SERVICE} label={_(msg`VeruSky`)}>
+            <ToggleButton.ButtonText>{_(msg`VeruSky`)}</ToggleButton.ButtonText>
           </ToggleButton.Button>
           <ToggleButton.Button name={BSKY_SERVICE} label={_(msg`Bluesky`)}>
             <ToggleButton.ButtonText>{_(msg`Bluesky`)}</ToggleButton.ButtonText>
@@ -149,7 +149,7 @@ function DialogInner({
 
         {fixedOption === VSKY_SERVICE && isFirstTimeUser && (
           <Admonition type="tip">
-            <Trans>Verisky adds unique features on top of Bluesky.</Trans>
+            <Trans>VeruSky adds unique features on top of Bluesky.</Trans>
           </Admonition>
         )}
 
@@ -215,7 +215,7 @@ function DialogInner({
             ]}>
             {fixedOption === VSKY_SERVICE ? (
               <Trans>
-                If you're a developer, you can use the Verisky features in your
+                If you're a developer, you can use the VeruSky features in your
                 own app.
               </Trans>
             ) : isFirstTimeUser ? (

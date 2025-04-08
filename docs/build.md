@@ -7,7 +7,7 @@
 
 You're all set!
 
-## Running the Verisky Web App
+## Running the VeruSky Web App
 
 - Web App
   - As above.

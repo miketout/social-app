@@ -106,20 +106,20 @@ With the data descriptors, the command should look similar to the following.
   "contentmultimap": {
     "iGyAsYou1KCBkspTRMtFfKusvZPmwHENE3": [
         {
-            "vrsc::data.type.object.datadescriptor": {
-              "version": 1,
-              "flags": 5,
-              "objectdata": "9617d77c118427b0d5642c51a2ffbae5c288e9d91c0b23d3bdc36d9d0ee73ef73c7191bdb8b821274975f7785b718b1b19a9cb038d2476dc96d520439bb4fbb95e3e36122a9790c9c60cedbdb9e4f49acf2c5f4307931171ad266h508e336f9ee49903fe56c96aa523ea3caa20d9bda79b074c71f51b9cfed874c7d6dba07242d29a4d5b48688e673febbbee0f9f65c11b72d35ff264",
-              "epk": "bf5a310cfd6e74cc8f1c2a4659232f30ea4e31a429d5d7c27080e349e9b1ec1d"
-            }
+          "vrsc::data.type.object.datadescriptor": {
+            "version": 1,
+            "flags": 5,
+            "objectdata": "9617d77c118427b0d5642c51a2ffbae5c288e9d91c0b23d3bdc36d9d0ee73ef73c7191bdb8b821274975f7785b718b1b19a9cb038d2476dc96d520439bb4fbb95e3e36122a9790c9c60cedbdb9e4f49acf2c5f4307931171ad266h508e336f9ee49903fe56c96aa523ea3caa20d9bda79b074c71f51b9cfed874c7d6dba07242d29a4d5b48688e673febbbee0f9f65c11b72d35ff264",
+            "epk": "bf5a310cfd6e74cc8f1c2a4659232f30ea4e31a429d5d7c27080e349e9b1ec1d"
+          }
         },
         {
-            "vrsc::data.type.object.datadescriptor": {
-              "version": 1,
-              "flags": 5,
-              "objectdata": "dec9a90e5f1f0fa3276899b05fba3b038a0d6454daa423183a959cfa4b5fe32dfaf7d2bf76b832c4e20d6f2f168414474440d1f5f7d98382a2cd052639cdafe006d33f7e15c52287f9d12d07d5b41d1bf3028f32cd2d76f8321c6bb324sa3054248dc295fca9a4a90bdf673d7b38638f2cf275399a4250e790db4870f42b9630d7f1a508cd5c691a0d0db9bec7222528e6809b8972d9",
-              "epk": "a54048e77af95d33f4b0a605e9cfe52be9168812c69370defdea82b834dd7ad5"
-            }
+          "vrsc::data.type.object.datadescriptor": {
+            "version": 1,
+            "flags": 5,
+            "objectdata": "dec9a90e5f1f0fa3276899b05fba3b038a0d6454daa423183a959cfa4b5fe32dfaf7d2bf76b832c4e20d6f2f168414474440d1f5f7d98382a2cd052639cdafe006d33f7e15c52287f9d12d07d5b41d1bf3028f32cd2d76f8321c6bb324sa3054248dc295fca9a4a90bdf673d7b38638f2cf275399a4250e790db4870f42b9630d7f1a508cd5c691a0d0db9bec7222528e6809b8972d9",
+            "epk": "a54048e77af95d33f4b0a605e9cfe52be9168812c69370defdea82b834dd7ad5"
+          }
         }
     ]
   }
@@ -131,9 +131,9 @@ With the data descriptors, the command should look similar to the following.
 For deeplinks to work on Linux, the operating system needs to be able to associate the desktop wallet with the deeplinks. The guide at in the description of a pull request at [https://github.com/VerusCoin/Verus-Desktop/pull/259](https://github.com/VerusCoin/Verus-Desktop/pull/259). It explains methods to get this association set up. I personally use the first method, [AppImageLauncher](https://github.com/TheAssassin/AppImageLauncher), that does it on running the appimage.
 
 
-## Setting up Verisky
+## Setting up VeruSky
 
-Get the Verisky code from [https://github.com/mcstoer/social-app/tree/verisky](https://github.com/mcstoer/social-app/tree/verisky) and checkout the `verisky` branch.
+Get the VeruSky code from [https://github.com/mcstoer/social-app/tree/verusky](https://github.com/mcstoer/social-app/tree/verusky) and checkout the `verusky` branch.
 
 ### Setting up the Environment
 
@@ -141,9 +141,9 @@ The project requires `nvm`, `Node.js` and `yarn`. Use `nvm install 20` and `nvm 
 
 My current setup uses `nvm` 0.40.1, `Node.js` 20.19.0 and `yarn` 1.22.22.
 
-### Running the Verisky Web App
+### Running the VeruSky Web App
 
-This follows in instructions in repository, which can be found at [https://github.com/mcstoer/social-app/blob/verisky/docs/build.md](https://github.com/mcstoer/social-app/blob/verisky/docs/build.md).
+This follows in instructions in repository, which can be found at [https://github.com/mcstoer/social-app/blob/verusky/docs/build.md](https://github.com/mcstoer/social-app/blob/verusky/docs/build.md).
 
 To run the main social media app, do the following.
 1. `yarn`
@@ -165,7 +165,7 @@ To run the signing server, open another terminal window, enter the `vskysignings
 
 1. Visit [http://localhost:19006](http://localhost:19006), the web app's URL.
 2. Click "Sign in".
-3. With the account provider as "Verisky", click "Next".
+3. With the account provider as "VeruSky", click "Next".
 4. This should pop up the verus.id login screen if the desktop wallet is properly associated with the deeplink.
 5. Review the login prompts and make sure to select the identity that has the credentials in it.
 6. Click "Done" and return back to the web app. The login should then complete.

@@ -3,12 +3,12 @@ import {
   ActivityIndicator,
   Keyboard,
   LayoutAnimation,
-  TextInput,
+  type TextInput,
   View,
 } from 'react-native'
 import {
   ComAtprotoServerCreateSession,
-  ComAtprotoServerDescribeServer,
+  type ComAtprotoServerDescribeServer,
 } from '@atproto/api'
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
@@ -26,7 +26,7 @@ import {createFullHandle} from '#/lib/strings/handles'
 import {logger} from '#/logger'
 import {useSetHasCheckedForStarterPack} from '#/state/preferences/used-starter-packs'
 import {useSessionApi, useSessionVskyApi} from '#/state/session'
-import {VskySession} from '#/state/session/types'
+import {type VskySession} from '#/state/session/types'
 import {useLoggedOutViewControls} from '#/state/shell/logged-out'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -295,36 +295,36 @@ export const LoginForm = ({
             } else {
               if (!username && !password) {
                 logger.warn(
-                  'Failed to find the username and password from the Verisky login.',
+                  'Failed to find the username and password from the VeruSky login.',
                 )
                 setError(
-                  _(msg`Missing username and password from Verisky login.`),
+                  _(msg`Missing username and password from VeruSky login.`),
                 )
               } else if (!username) {
                 logger.warn(
-                  'Failed to find the username from the Verisky login.',
+                  'Failed to find the username from the VeruSky login.',
                 )
-                setError(_(msg`Missing username from Verisky login.`))
+                setError(_(msg`Missing username from VeruSky login.`))
               } else if (!password) {
                 logger.warn(
-                  'Failed to find the password from the Verisky login.',
+                  'Failed to find the password from the VeruSky login.',
                 )
-                setError(_(msg`Missing password from Verisky login.`))
+                setError(_(msg`Missing password from VeruSky login.`))
               }
             }
           } else {
             logger.warn('Failed to login due to invalid login response')
-            setError(_(msg`Unable to validate the Verisky login.`))
+            setError(_(msg`Unable to validate the VeruSky login.`))
           }
         } else {
           logger.warn(
             'Failed to login due to unknown signing ID in login response',
           )
-          setError(_(msg`Unable to lookup Verisky login ID.`))
+          setError(_(msg`Unable to lookup VeruSky login ID.`))
         }
       } catch (e: any) {
         const errMsg = e.toString()
-        logger.warn('Failed to verify Verisky login response', {error: errMsg})
+        logger.warn('Failed to verify VeruSky login response', {error: errMsg})
         setError(cleanError(errMsg))
       }
     }
