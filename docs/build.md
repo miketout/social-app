@@ -11,8 +11,6 @@ You're all set!
 
 - Web App
   - As above.
-  - Remember to setup the environment variables.
-    - `TEST_USERNAME` and `TEST_PASSWORD` are needed to test the login with Bluesky.
 - Login Server (vskylogin)
   - Go to the vskylogin directory.
   - `yarn`
