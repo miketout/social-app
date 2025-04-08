@@ -1,7 +1,6 @@
 import React from 'react'
-import {AtpSessionEvent, BskyAgent} from '@atproto/api'
+import {type AtpSessionEvent, type BskyAgent} from '@atproto/api'
 
-import {logEvent} from '#/lib/statsig/statsig'
 import {isWeb} from '#/platform/detection'
 import * as persisted from '#/state/persisted'
 import {useCloseAllActiveElements} from '#/state/util'
@@ -9,7 +8,7 @@ import {useGlobalDialogsControlContext} from '#/components/dialogs/Context'
 import {emitSessionDropped} from '../events'
 import {
   agentToSessionAccount,
-  BskyAppAgent,
+  type BskyAppAgent,
   createAgentAndCreateAccount,
   createAgentAndLogin,
   createAgentAndResume,
@@ -25,11 +24,13 @@ import {VerusdRpcInterface} from 'verusd-rpc-ts-client'
 import {VerusIdInterface} from 'verusid-ts-client'
 
 import {VSKY_SERVICE, VSKY_SERVICE_ID} from '#/lib/constants'
+
+import {logger} from '#/logger'
 import {
-  SessionAccount,
-  SessionApiContext,
-  SessionStateContext,
-  SessionVskyApiContext,
+  type SessionAccount,
+  type SessionApiContext,
+  type SessionStateContext,
+  type SessionVskyApiContext,
 } from '#/state/session/types'
 
 const StateContext = React.createContext<SessionStateContext>({
@@ -80,10 +81,10 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
   )
 
   const createAccount = React.useCallback<SessionApiContext['createAccount']>(
-    async params => {
+    async (params, metrics) => {
       addSessionDebugLog({type: 'method:start', method: 'createAccount'})
       const signal = cancelPendingTask()
-      logEvent('account:create:begin', {})
+      logger.metric('account:create:begin', {}, {statsig: true})
       const {agent, account} = await createAgentAndCreateAccount(
         params,
         onAgentSessionChange,
@@ -97,7 +98,7 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
         newAgent: agent,
         newAccount: account,
       })
-      logEvent('account:create:success', {})
+      logger.metric('account:create:success', metrics, {statsig: true})
       addSessionDebugLog({type: 'method:end', method: 'createAccount', account})
     },
     [onAgentSessionChange, cancelPendingTask],
@@ -131,7 +132,11 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
         newAgent: agent,
         newAccount: account,
       })
-      logEvent('account:loggedIn', {logContext, withPassword: true})
+      logger.metric(
+        'account:loggedIn',
+        {logContext, withPassword: true},
+        {statsig: true},
+      )
       addSessionDebugLog({type: 'method:end', method: 'login', account})
     },
     [onAgentSessionChange, cancelPendingTask],
@@ -146,7 +151,11 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
       dispatch({
         type: 'logged-out-current-account',
       })
-      logEvent('account:loggedOut', {logContext, scope: 'current'})
+      logger.metric(
+        'account:loggedOut',
+        {logContext, scope: 'current'},
+        {statsig: true},
+      )
       addSessionDebugLog({type: 'method:end', method: 'logout'})
     },
     [cancelPendingTask],
@@ -161,7 +170,11 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
       dispatch({
         type: 'logged-out-every-account',
       })
-      logEvent('account:loggedOut', {logContext, scope: 'every'})
+      logger.metric(
+        'account:loggedOut',
+        {logContext, scope: 'every'},
+        {statsig: true},
+      )
       addSessionDebugLog({type: 'method:end', method: 'logout'})
     },
     [cancelPendingTask],
