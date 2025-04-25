@@ -7,14 +7,17 @@ import {
 } from '@atproto/api'
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
+import {useQueryClient} from '@tanstack/react-query'
+import * as bcp47Match from 'bcp-47-match'
 
-import {useInitialNumToRender} from '#/lib/hooks/useInitialNumToRender'
 import {useGate} from '#/lib/statsig/statsig'
 import {cleanError} from '#/lib/strings/errors'
 import {sanitizeHandle} from '#/lib/strings/handles'
 import {logger} from '#/logger'
 import {type MetricEvents} from '#/logger/metrics'
+import {useLanguagePrefs} from '#/state/preferences/languages'
 import {useModerationOpts} from '#/state/preferences/moderation-opts'
+import {RQKEY_ROOT_PAGINATED as useActorSearchPaginatedQueryKeyRoot} from '#/state/queries/actor-search'
 import {
   type FeedPreviewItem,
   useFeedPreviews,
@@ -22,9 +25,16 @@ import {
 import {useGetPopularFeedsQuery} from '#/state/queries/feed'
 import {Nux, useNux} from '#/state/queries/nuxs'
 import {usePreferencesQuery} from '#/state/queries/preferences'
-import {useGetSuggestedFeedsQuery} from '#/state/queries/trending/useGetSuggestedFeedsQuery'
-import {useGetSuggestedUsersQuery} from '#/state/queries/trending/useGetSuggestedUsersQuery'
-import {useSuggestedStarterPacksQuery} from '#/state/queries/useSuggestedStarterPacksQuery'
+import {
+  createGetSuggestedFeedsQueryKey,
+  useGetSuggestedFeedsQuery,
+} from '#/state/queries/trending/useGetSuggestedFeedsQuery'
+import {getSuggestedUsersQueryKeyRoot} from '#/state/queries/trending/useGetSuggestedUsersQuery'
+import {createGetTrendsQueryKey} from '#/state/queries/trending/useGetTrendsQuery'
+import {
+  createSuggestedStarterPacksQueryKey,
+  useSuggestedStarterPacksQuery,
+} from '#/state/queries/useSuggestedStarterPacksQuery'
 import {useProgressGuide} from '#/state/shell/progress-guide'
 import {isThreadChildAt, isThreadParentAt} from '#/view/com/posts/PostFeed'
 import {PostFeedItem} from '#/view/com/posts/PostFeedItem'
@@ -33,6 +43,10 @@ import {List} from '#/view/com/util/List'
 import {FeedFeedLoadingPlaceholder} from '#/view/com/util/LoadingPlaceholder'
 import {LoadMoreRetryBtn} from '#/view/com/util/LoadMoreRetryBtn'
 import {
+  popularInterests,
+  useInterestsDisplayNames,
+} from '#/screens/Onboarding/state'
+import {
   StarterPackCard,
   StarterPackCardSkeleton,
 } from '#/screens/Search/components/StarterPackCard'
@@ -40,7 +54,9 @@ import {ExploreInterestsCard} from '#/screens/Search/modules/ExploreInterestsCar
 import {ExploreRecommendations} from '#/screens/Search/modules/ExploreRecommendations'
 import {ExploreTrendingTopics} from '#/screens/Search/modules/ExploreTrendingTopics'
 import {ExploreTrendingVideos} from '#/screens/Search/modules/ExploreTrendingVideos'
-import {atoms as a, native, platform, useTheme, web} from '#/alf'
+import {useSuggestedUsers} from '#/screens/Search/util/useSuggestedUsers'
+import {atoms as a, native, platform, useTheme} from '#/alf'
+import {Admonition} from '#/components/Admonition'
 import {Button} from '#/components/Button'
 import * as FeedCard from '#/components/FeedCard'
 import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
@@ -49,9 +65,12 @@ import {type Props as IcoProps} from '#/components/icons/common'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {ListSparkle_Stroke2_Corner0_Rounded as ListSparkle} from '#/components/icons/ListSparkle'
 import {StarterPack} from '#/components/icons/StarterPack'
+import {Trending2_Stroke2_Corner2_Rounded as Graph} from '#/components/icons/Trending'
 import {UserCircle_Stroke2_Corner0_Rounded as Person} from '#/components/icons/UserCircle'
 import {Loader} from '#/components/Loader'
 import * as ProfileCard from '#/components/ProfileCard'
+import {boostInterests} from '#/components/ProgressGuide/FollowDialog'
+import {SubtleHover} from '#/components/SubtleHover'
 import {Text} from '#/components/Typography'
 import * as ModuleHeader from './components/ModuleHeader'
 import {
@@ -69,33 +88,26 @@ function LoadMore({item}: {item: ExploreScreenItems & {type: 'loadMore'}}) {
       onPress={item.onLoadMore}
       style={[a.relative, a.w_full]}>
       {({hovered, pressed}) => (
-        <View
-          style={[
-            a.flex_1,
-            a.flex_row,
-            a.align_center,
-            a.justify_center,
-            a.px_lg,
-            a.py_md,
-            a.gap_sm,
-            (hovered || pressed) && t.atoms.bg_contrast_25,
-          ]}>
-          <Text
+        <>
+          <SubtleHover hover={hovered || pressed} />
+          <View
             style={[
-              a.leading_snug,
-              hovered ? t.atoms.text : t.atoms.text_contrast_medium,
+              a.flex_1,
+              a.flex_row,
+              a.align_center,
+              a.justify_center,
+              a.px_lg,
+              a.py_md,
+              a.gap_sm,
             ]}>
-            {item.message}
-          </Text>
-          {item.isLoadingMore ? (
-            <Loader size="sm" />
-          ) : (
-            <ChevronDownIcon
-              size="sm"
-              style={hovered ? t.atoms.text : t.atoms.text_contrast_medium}
-            />
-          )}
-        </View>
+            <Text style={[a.leading_snug]}>{item.message}</Text>
+            {item.isLoadingMore ? (
+              <Loader size="sm" />
+            ) : (
+              <ChevronDownIcon size="sm" style={t.atoms.text_contrast_medium} />
+            )}
+          </View>
+        </>
       )}
     </Button>
   )
@@ -112,6 +124,7 @@ type ExploreScreenItems =
       title: string
       icon: React.ComponentType<SVGIconProps>
       iconSize?: IcoProps['size']
+      bottomBorder?: boolean
       searchButton?: {
         label: string
         metricsTag: MetricEvents['explore:module:searchButtonPress']['module']
@@ -128,6 +141,7 @@ type ExploreScreenItems =
         metricsTag: MetricEvents['explore:module:searchButtonPress']['module']
         tab: 'user' | 'profile' | 'feed'
       }
+      hideDefaultTab?: boolean
     }
   | {
       type: 'trendingTopics'
@@ -144,8 +158,12 @@ type ExploreScreenItems =
   | {
       type: 'profile'
       key: string
-      profile: AppBskyActorDefs.ProfileViewBasic
+      profile: AppBskyActorDefs.ProfileView
       recId?: number
+    }
+  | {
+      type: 'profileEmpty'
+      key: 'profileEmpty'
     }
   | {
       type: 'feed'
@@ -190,27 +208,42 @@ type ExploreScreenItems =
 
 export function Explore({
   focusSearchInput,
-  headerHeight,
 }: {
   focusSearchInput: (tab: 'user' | 'profile' | 'feed') => void
   headerHeight: number
 }) {
   const {_} = useLingui()
   const t = useTheme()
-  const initialNumToRender = useInitialNumToRender()
   const {data: preferences, error: preferencesError} = usePreferencesQuery()
   const moderationOpts = useModerationOpts()
   const gate = useGate()
   const guide = useProgressGuide('follow-10')
   const [selectedInterest, setSelectedInterest] = useState<string | null>(null)
-  // TODO always get at least 10 back
+
+  /*
+   * Begin special language handling
+   */
+  const {contentLanguages} = useLanguagePrefs()
+  const useFullExperience = useMemo(() => {
+    if (contentLanguages.length === 0) return true
+    return bcp47Match.basicFilter('en', contentLanguages).length > 0
+  }, [contentLanguages])
+  const personalizedInterests = preferences?.interests?.tags
+  const interestsDisplayNames = useInterestsDisplayNames()
+  const interests = Object.keys(interestsDisplayNames)
+    .sort(boostInterests(popularInterests))
+    .sort(boostInterests(personalizedInterests))
   const {
     data: suggestedUsers,
     isLoading: suggestedUsersIsLoading,
     error: suggestedUsersError,
-  } = useGetSuggestedUsersQuery({
-    category: selectedInterest,
+    isRefetching: suggestedUsersIsRefetching,
+  } = useSuggestedUsers({
+    category: selectedInterest || (useFullExperience ? null : interests[0]),
+    search: !useFullExperience,
   })
+  /* End special language handling */
+
   const {
     data: feeds,
     hasNextPage: hasNextFeedsPage,
@@ -218,7 +251,7 @@ export function Explore({
     isFetchingNextPage: isFetchingNextFeedsPage,
     error: feedsError,
     fetchNextPage: fetchNextFeedsPage,
-  } = useGetPopularFeedsQuery({limit: 10})
+  } = useGetPopularFeedsQuery({limit: 10, enabled: useFullExperience})
   const interestsNux = useNux(Nux.ExploreInterestsCard)
   const showInterestsNux =
     interestsNux.status === 'ready' && !interestsNux.nux?.completed
@@ -227,7 +260,8 @@ export function Explore({
     data: suggestedSPs,
     isLoading: isLoadingSuggestedSPs,
     error: suggestedSPsError,
-  } = useSuggestedStarterPacksQuery()
+    isRefetching: isRefetchingSuggestedSPs,
+  } = useSuggestedStarterPacksQuery({enabled: useFullExperience})
 
   const isLoadingMoreFeeds = isFetchingNextFeedsPage && !isLoadingFeeds
   const [hasPressedLoadMoreFeeds, setHasPressedLoadMoreFeeds] = useState(false)
@@ -250,7 +284,9 @@ export function Explore({
     hasPressedLoadMoreFeeds,
   ])
 
-  const {data: suggestedFeeds} = useGetSuggestedFeedsQuery()
+  const {data: suggestedFeeds} = useGetSuggestedFeedsQuery({
+    enabled: useFullExperience,
+  })
   const {
     data: feedPreviewSlices,
     query: {
@@ -260,7 +296,31 @@ export function Explore({
       hasNextPage: hasNextPageFeedPreviews,
       error: feedPreviewSlicesError,
     },
-  } = useFeedPreviews(suggestedFeeds?.feeds ?? [])
+  } = useFeedPreviews(suggestedFeeds?.feeds ?? [], useFullExperience)
+
+  const qc = useQueryClient()
+  const [isPTR, setIsPTR] = useState(false)
+  const onPTR = useCallback(async () => {
+    setIsPTR(true)
+    await Promise.all([
+      await qc.resetQueries({
+        queryKey: createGetTrendsQueryKey(),
+      }),
+      await qc.resetQueries({
+        queryKey: createSuggestedStarterPacksQueryKey(),
+      }),
+      await qc.resetQueries({
+        queryKey: [getSuggestedUsersQueryKeyRoot],
+      }),
+      await qc.resetQueries({
+        queryKey: [useActorSearchPaginatedQueryKeyRoot],
+      }),
+      await qc.resetQueries({
+        queryKey: createGetSuggestedFeedsQueryKey(),
+      }),
+    ])
+    setIsPTR(false)
+  }, [qc, setIsPTR])
 
   const onLoadMoreFeedPreviews = useCallback(async () => {
     if (
@@ -303,9 +363,10 @@ export function Explore({
         metricsTag: 'suggestedAccounts',
         tab: 'user',
       },
+      hideDefaultTab: !useFullExperience,
     })
 
-    if (suggestedUsersIsLoading) {
+    if (suggestedUsersIsLoading || suggestedUsersIsRefetching) {
       i.push({type: 'profilePlaceholder', key: 'profilePlaceholder'})
     } else if (suggestedUsersError) {
       i.push({
@@ -322,6 +383,7 @@ export function Explore({
           let seen = new Set()
           const profileItems: ExploreScreenItems[] = []
           for (const actor of suggestedUsers.actors) {
+            // checking for following still necessary if search data is used
             if (!seen.has(actor.did) && !actor.viewer?.following) {
               seen.add(actor.did)
               profileItems.push({
@@ -333,14 +395,23 @@ export function Explore({
           }
 
           if (profileItems.length === 0) {
-            // no items! remove the header
-            i.pop()
+            i.push({
+              type: 'profileEmpty',
+              key: 'profileEmpty',
+            })
           } else {
-            i.push(...profileItems)
+            if (selectedInterest === null && useFullExperience) {
+              // First "For You" tab, only show 5 to keep screen short
+              i.push(...profileItems.slice(0, 5))
+            } else {
+              i.push(...profileItems)
+            }
           }
         } else {
-          // no items! remove the header
-          i.pop()
+          i.push({
+            type: 'profileEmpty',
+            key: 'profileEmpty',
+          })
         }
       } else {
         i.push({type: 'profilePlaceholder', key: 'profilePlaceholder'})
@@ -352,7 +423,10 @@ export function Explore({
     moderationOpts,
     suggestedUsers,
     suggestedUsersIsLoading,
+    suggestedUsersIsRefetching,
     suggestedUsersError,
+    selectedInterest,
+    useFullExperience,
   ])
   const suggestedFeedsModule = useMemo(() => {
     const i: ExploreScreenItems[] = []
@@ -466,7 +540,7 @@ export function Explore({
       iconSize: 'xl',
     })
 
-    if (isLoadingSuggestedSPs) {
+    if (isLoadingSuggestedSPs || isRefetchingSuggestedSPs) {
       Array.from({length: 3}).forEach((__, index) =>
         i.push({
           type: 'starterPackSkeleton',
@@ -486,7 +560,13 @@ export function Explore({
       })
     }
     return i
-  }, [suggestedSPs, _, isLoadingSuggestedSPs, suggestedSPsError])
+  }, [
+    suggestedSPs,
+    _,
+    isLoadingSuggestedSPs,
+    suggestedSPsError,
+    isRefetchingSuggestedSPs,
+  ])
   const feedPreviewsModule = useMemo(() => {
     const i: ExploreScreenItems[] = []
     i.push(...feedPreviewSlices)
@@ -517,22 +597,35 @@ export function Explore({
 
     i.push(topBorder)
     i.push(...interestsNuxModule)
-    if (isNewUser) {
-      i.push(...suggestedFollowsModule)
-      i.push(...suggestedStarterPacksModule)
-      i.push(trendingTopicsModule)
+
+    if (useFullExperience) {
+      if (isNewUser) {
+        i.push(...suggestedFollowsModule)
+        i.push(...suggestedStarterPacksModule)
+        i.push({
+          type: 'header',
+          key: 'trending-topics-header',
+          title: _(msg`Trending topics`),
+          icon: Graph,
+          bottomBorder: true,
+        })
+        i.push(trendingTopicsModule)
+      } else {
+        i.push(trendingTopicsModule)
+        i.push(...suggestedFollowsModule)
+        i.push(...suggestedStarterPacksModule)
+      }
+      if (gate('explore_show_suggested_feeds')) {
+        i.push(...suggestedFeedsModule)
+      }
+      i.push(...feedPreviewsModule)
     } else {
-      i.push(trendingTopicsModule)
       i.push(...suggestedFollowsModule)
-      i.push(...suggestedStarterPacksModule)
     }
-    if (gate('explore_show_suggested_feeds')) {
-      i.push(...suggestedFeedsModule)
-    }
-    i.push(...feedPreviewsModule)
 
     return i
   }, [
+    _,
     topBorder,
     isNewUser,
     suggestedFollowsModule,
@@ -542,6 +635,7 @@ export function Explore({
     feedPreviewsModule,
     interestsNuxModule,
     gate,
+    useFullExperience,
   ])
 
   const renderItem = useCallback(
@@ -549,22 +643,11 @@ export function Explore({
       switch (item.type) {
         case 'topBorder':
           return (
-            <View
-              style={[
-                a.w_full,
-                t.atoms.border_contrast_low,
-                a.border_t,
-                headerHeight &&
-                  web({
-                    position: 'sticky',
-                    top: headerHeight,
-                  }),
-              ]}
-            />
+            <View style={[a.w_full, t.atoms.border_contrast_low, a.border_t]} />
           )
         case 'header': {
           return (
-            <ModuleHeader.Container>
+            <ModuleHeader.Container bottomBorder={item.bottomBorder}>
               <ModuleHeader.Icon icon={item.icon} size={item.iconSize} />
               <ModuleHeader.TitleText>{item.title}</ModuleHeader.TitleText>
               {item.searchButton && (
@@ -596,6 +679,7 @@ export function Explore({
               <SuggestedAccountsTabBar
                 selectedInterest={selectedInterest}
                 onSelectInterest={setSelectedInterest}
+                hideDefaultTab={item.hideDefaultTab}
               />
             </View>
           )
@@ -621,6 +705,21 @@ export function Explore({
               recId={item.recId}
               position={index}
             />
+          )
+        }
+        case 'profileEmpty': {
+          return (
+            <View style={[a.px_lg, a.pb_lg]}>
+              <Admonition>
+                {selectedInterest ? (
+                  <Trans>
+                    No results for "{interestsDisplayNames[selectedInterest]}".
+                  </Trans>
+                ) : (
+                  <Trans>No results.</Trans>
+                )}
+              </Admonition>
+            </View>
           )
         }
         case 'feed': {
@@ -737,8 +836,13 @@ export function Explore({
         case 'preview:header': {
           return (
             <ModuleHeader.Container
-              headerHeight={headerHeight}
-              style={[a.pt_xs, a.border_b, t.atoms.border_contrast_low]}>
+              style={[
+                a.pt_xs,
+                t.atoms.border_contrast_low,
+                native(a.border_b),
+              ]}>
+              {/* Very non-scientific way to avoid small gap on scroll */}
+              <View style={[a.absolute, a.inset_0, t.atoms.bg, {top: -2}]} />
               <ModuleHeader.FeedLink feed={item.feed}>
                 <ModuleHeader.FeedAvatar feed={item.feed} />
                 <View style={[a.flex_1, a.gap_xs]}>
@@ -817,9 +921,9 @@ export function Explore({
       focusSearchInput,
       moderationOpts,
       selectedInterest,
+      interestsDisplayNames,
       _,
       fetchNextPageFeedPreviews,
-      headerHeight,
     ],
   )
 
@@ -854,7 +958,7 @@ export function Explore({
     }
     if (!alreadyReportedRef.current.has(module)) {
       alreadyReportedRef.current.set(module, module)
-      logger.metric('explore:module:seen', {module}) //, index: index ?? -1})
+      logger.metric('explore:module:seen', {module})
     }
   }, [])
 
@@ -871,11 +975,28 @@ export function Explore({
       viewabilityConfig={viewabilityConfig}
       onItemSeen={onItemSeen}
       onEndReached={onLoadMoreFeedPreviews}
-      onEndReachedThreshold={3}
-      initialNumToRender={initialNumToRender}
-      windowSize={9}
-      maxToRenderPerBatch={platform({ios: 5, default: 1})}
-      updateCellsBatchingPeriod={40}
+      /**
+       * Default: 2
+       */
+      onEndReachedThreshold={4}
+      /**
+       * Default: 10
+       */
+      initialNumToRender={10}
+      /**
+       * Default: 21
+       */
+      windowSize={platform({android: 11})}
+      /**
+       * Default: 10
+       */
+      maxToRenderPerBatch={platform({android: 1})}
+      /**
+       * Default: 50
+       */
+      updateCellsBatchingPeriod={platform({android: 25})}
+      refreshing={isPTR}
+      onRefresh={onPTR}
     />
   )
 }

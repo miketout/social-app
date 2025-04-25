@@ -13,15 +13,14 @@ export const DEFAULT_LIMIT = 5
 
 export const createGetSuggestedFeedsQueryKey = () => ['suggested-feeds']
 
-export function useGetSuggestedFeedsQuery() {
+export function useGetSuggestedFeedsQuery({enabled}: {enabled?: boolean}) {
   const agent = useAgent()
   const {data: preferences} = usePreferencesQuery()
   const savedFeeds = preferences?.savedFeeds
 
   return useQuery({
-    enabled: !!preferences,
-    refetchOnWindowFocus: true,
-    staleTime: STALE.MINUTES.ONE,
+    enabled: !!preferences && enabled !== false,
+    staleTime: STALE.MINUTES.THREE,
     queryKey: createGetSuggestedFeedsQueryKey(),
     queryFn: async () => {
       const contentLangs = getContentLanguages().join(',')
