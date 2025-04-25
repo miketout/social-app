@@ -268,6 +268,9 @@ export const LoginForm = ({
 
       try {
         const isValid = await idInterface.verifyLoginConsentResponse(loginRes)
+        console.log(res)
+        const cid = await idInterface.getChainId()
+        console.log(cid)
         if (isValid) {
           const identity = await rpcInterface.getIdentity(loginRes.signing_id)
           if (identity.result) {
@@ -275,37 +278,41 @@ export const LoginForm = ({
 
             // Get the Bluesky credentials from the credentials in the login request.
             const credentials = loginRes.decision.credentials
-            const username = credentials.find(
+            const plainLogin = credentials.find(
               cred =>
                 cred.credentialKey ===
-                primitives.IDENTITY_CREDENTIAL_USERNAME.vdxfid,
+                primitives.IDENTITY_CREDENTIAL_PLAINLOGIN.vdxfid,
             )?.credential
 
-            const password = credentials.find(
-              cred =>
-                cred.credentialKey ===
-                primitives.IDENTITY_CREDENTIAL_PASSWORD.vdxfid,
-            )?.credential
-
-            if (username && password) {
+            if (
+              plainLogin &&
+              Array.isArray(plainLogin) &&
+              plainLogin.length >= 2
+            ) {
               // JSON.stringify avoids misinterpreting parts of the username or password as control characters.
-              identifierValueRef.current = JSON.stringify(username).slice(1, -1)
-              passwordValueRef.current = JSON.stringify(password).slice(1, -1)
+              identifierValueRef.current = JSON.stringify(plainLogin[0]).slice(
+                1,
+                -1,
+              )
+              passwordValueRef.current = JSON.stringify(plainLogin[1]).slice(
+                1,
+                -1,
+              )
               onPressNext()
             } else {
-              if (!username && !password) {
+              if (!plainLogin || !Array.isArray(plainLogin)) {
                 logger.warn(
                   'Failed to find the username and password from the VeruSky login.',
                 )
                 setError(
                   _(msg`Missing username and password from VeruSky login.`),
                 )
-              } else if (!username) {
+              } else if (!plainLogin[0]) {
                 logger.warn(
                   'Failed to find the username from the VeruSky login.',
                 )
                 setError(_(msg`Missing username from VeruSky login.`))
-              } else if (!password) {
+              } else if (!plainLogin[1]) {
                 logger.warn(
                   'Failed to find the password from the VeruSky login.',
                 )
