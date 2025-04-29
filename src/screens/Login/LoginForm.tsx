@@ -73,6 +73,7 @@ export const LoginForm = ({
     useState<boolean>(false)
   const [isAuthFactorTokenValueEmpty, setIsAuthFactorTokenValueEmpty] =
     useState<boolean>(true)
+  const [needsManualLogin, setNeedsManualLogin] = useState<boolean>(false)
   const identifierValueRef = useRef<string>(initialHandle || '')
   const passwordValueRef = useRef<string>('')
   const authFactorTokenValueRef = useRef<string>('')
@@ -192,6 +193,16 @@ export const LoginForm = ({
         },
         'LoginForm',
       )
+
+      const isManualLoginAfterVskyFailed = isVskyService && needsManualLogin
+
+      // TODO: In the future, ask the user if they want to store credentials
+      if (isManualLoginAfterVskyFailed) {
+        logger.debug(
+          'Successfully logged in manually after VeruSky login failed',
+        )
+      }
+
       onAttemptSuccess()
       setShowLoggedOut(false)
       setHasCheckedForStarterPack(true)
@@ -218,7 +229,18 @@ export const LoginForm = ({
           logger.debug('Failed to login due to invalid credentials', {
             error: errMsg,
           })
-          setError(_(msg`Incorrect username or password`))
+
+          // Fallback to standard login if VeruSky login has invalid credentials.
+          if (isVskyService && !needsManualLogin) {
+            setNeedsManualLogin(true)
+            setError(
+              _(
+                msg`Invalid Bluesky credentials in your Verus ID. Please log in manually.`,
+              ),
+            )
+          } else {
+            setError(_(msg`Incorrect username or password`))
+          }
         } else if (isNetworkError(e)) {
           logger.warn('Failed to login due to network error', {error: errMsg})
           setError(
@@ -268,9 +290,6 @@ export const LoginForm = ({
 
       try {
         const isValid = await idInterface.verifyLoginConsentResponse(loginRes)
-        console.log(res)
-        const cid = await idInterface.getChainId()
-        console.log(cid)
         if (isValid) {
           const identity = await rpcInterface.getIdentity(loginRes.signing_id)
           if (identity.result) {
@@ -300,24 +319,39 @@ export const LoginForm = ({
               )
               onPressNext()
             } else {
+              // If the credentials don't exist, then the user needs to manually input them.
               if (!plainLogin || !Array.isArray(plainLogin)) {
                 logger.warn(
                   'Failed to find the username and password from the VeruSky login.',
                 )
+                setNeedsManualLogin(true)
                 setError(
-                  _(msg`Missing username and password from VeruSky login.`),
+                  _(
+                    msg`Missing username and password from VeruSky login. Please log in manually.`,
+                  ),
                 )
               } else if (!plainLogin[0]) {
                 logger.warn(
                   'Failed to find the username from the VeruSky login.',
                 )
-                setError(_(msg`Missing username from VeruSky login.`))
+                setNeedsManualLogin(true)
+                setError(
+                  _(
+                    msg`Missing username from VeruSky login. Please log in manually.`,
+                  ),
+                )
               } else if (!plainLogin[1]) {
                 logger.warn(
                   'Failed to find the password from the VeruSky login.',
                 )
-                setError(_(msg`Missing password from VeruSky login.`))
+                setNeedsManualLogin(true)
+                setError(
+                  _(
+                    msg`Missing password from VeruSky login. Please log in manually.`,
+                  ),
+                )
               }
+              setIsProcessing(false)
             }
           } else {
             logger.warn('Failed to login due to invalid login response')
@@ -341,6 +375,10 @@ export const LoginForm = ({
     }, pollInterval)
   }
 
+  const resetManualLoginState = () => {
+    setNeedsManualLogin(false)
+  }
+
   return (
     <FormContainer testID="loginForm" titleText={<Trans>Sign in</Trans>}>
       <View>
@@ -349,11 +387,14 @@ export const LoginForm = ({
         </TextField.LabelText>
         <HostingProvider
           serviceUrl={serviceUrl}
-          onSelectServiceUrl={setServiceUrl}
+          onSelectServiceUrl={url => {
+            setServiceUrl(url)
+            resetManualLoginState()
+          }}
           onOpenDialog={onPressSelectService}
         />
       </View>
-      {!isVskyService && (
+      {(!isVskyService || (isVskyService && needsManualLogin)) && (
         <View>
           <TextField.LabelText>
             <Trans>Account</Trans>
@@ -370,7 +411,7 @@ export const LoginForm = ({
                 autoComplete="username"
                 returnKeyType="next"
                 textContentType="username"
-                defaultValue={initialHandle || ''}
+                defaultValue={needsManualLogin ? '' : initialHandle || ''}
                 onChangeText={v => {
                   identifierValueRef.current = v
                 }}
@@ -508,14 +549,16 @@ export const LoginForm = ({
             testID="loginNextButton"
             label={_(msg`Next`)}
             accessibilityHint={
-              isVskyService
+              isVskyService && !needsManualLogin
                 ? _(msg`Links to signing in on the same device`)
                 : _(msg`Navigates to the next screen`)
             }
             variant="solid"
             color="primary"
             size="large"
-            onPress={isVskyService ? startVskyLogin : onPressNext}>
+            onPress={
+              isVskyService && !needsManualLogin ? startVskyLogin : onPressNext
+            }>
             <ButtonText>
               <Trans>Next</Trans>
             </ButtonText>

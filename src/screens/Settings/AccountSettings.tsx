@@ -20,6 +20,7 @@ import {Lock_Stroke2_Corner2_Rounded as LockIcon} from '#/components/icons/Lock'
 import {PencilLine_Stroke2_Corner2_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {ShieldCheck_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Shield'
 import {Trash_Stroke2_Corner2_Rounded} from '#/components/icons/Trash'
+import {Verified_Stroke2_Corner2_Rounded} from '#/components/icons/Verified'
 import * as Layout from '#/components/Layout'
 import {ChangeHandleDialog} from './components/ChangeHandleDialog'
 import {DeactivateAccountDialog} from './components/DeactivateAccountDialog'
@@ -68,7 +69,10 @@ export function AccountSettingsScreen({}: Props) {
                     )}
                   </SettingsList.BadgeText>
                   {currentAccount.name && (
-                    <VerifiedIcon fill={t.palette.primary_500} size="md" />
+                    <Verified_Stroke2_Corner2_Rounded
+                      fill={t.palette.primary_500}
+                      size="md"
+                    />
                   )}
                 </>
               )}
