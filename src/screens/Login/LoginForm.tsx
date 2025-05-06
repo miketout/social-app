@@ -230,12 +230,12 @@ export const LoginForm = ({
             error: errMsg,
           })
 
-          // Fallback to standard login if VeruSky login has invalid credentials.
+          // Fallback to standard login if the VeruSky login has invalid credentials.
           if (isVskyService && !needsManualLogin) {
             setNeedsManualLogin(true)
             setError(
               _(
-                msg`Invalid Bluesky credentials in your Verus ID. Please log in manually.`,
+                msg`Unable to verify Bluesky credentials. Please sign in manually.`,
               ),
             )
           } else {
