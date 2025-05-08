@@ -296,12 +296,25 @@ export const LoginForm = ({
             vskySessionValueRef.current.name = identity.result.identity.name
 
             // Get the Bluesky credentials from the credentials in the login request.
-            const credentials = loginRes.decision.credentials
-            const plainLogin = credentials.find(
-              cred =>
-                cred.credentialKey ===
-                primitives.IDENTITY_CREDENTIAL_PLAINLOGIN.vdxfid,
-            )?.credential
+            const context = loginRes.decision.context
+            const credential = new primitives.Credential()
+            const credentialHex =
+              context?.kv[primitives.IDENTITY_CREDENTIAL_PLAINLOGIN.vdxfid]
+
+            if (!credentialHex) {
+              logger.warn('Failed to find credentials in VeruSky login.')
+              setNeedsManualLogin(true)
+              setError(
+                _(
+                  msg`Missing login credentials from VeruSky. Please log in manually.`,
+                ),
+              )
+              setIsProcessing(false)
+              return
+            }
+
+            credential.fromBuffer(Buffer.from(credentialHex, 'hex'))
+            const plainLogin = credential.credential
 
             if (
               plainLogin &&
