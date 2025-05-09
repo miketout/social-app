@@ -558,25 +558,48 @@ export const LoginForm = ({
             </Text>
           </>
         ) : (
-          <Button
-            testID="loginNextButton"
-            label={_(msg`Next`)}
-            accessibilityHint={
-              isVskyService && !needsManualLogin
-                ? _(msg`Links to signing in on the same device`)
-                : _(msg`Navigates to the next screen`)
-            }
-            variant="solid"
-            color="primary"
-            size="large"
-            onPress={
-              isVskyService && !needsManualLogin ? startVskyLogin : onPressNext
-            }>
-            <ButtonText>
-              <Trans>Next</Trans>
-            </ButtonText>
-            {isProcessing && <ButtonIcon icon={Loader} />}
-          </Button>
+          <>
+            {isVskyService && needsManualLogin && (
+              <Button
+                testID="vskyRetryButton"
+                label={_(msg`Retry`)}
+                accessibilityHint={_(msg`Retries VeruSky login`)}
+                variant="solid"
+                color="secondary"
+                size="large"
+                onPress={() => {
+                  setNeedsManualLogin(false)
+                  startVskyLogin()
+                  setError('')
+                }}
+                style={[a.mr_sm]}>
+                <ButtonText>
+                  <Trans>Retry</Trans>
+                </ButtonText>
+              </Button>
+            )}
+            <Button
+              testID="loginNextButton"
+              label={_(msg`Next`)}
+              accessibilityHint={
+                isVskyService && !needsManualLogin
+                  ? _(msg`Links to signing in on the same device`)
+                  : _(msg`Navigates to the next screen`)
+              }
+              variant="solid"
+              color="primary"
+              size="large"
+              onPress={
+                isVskyService && !needsManualLogin
+                  ? startVskyLogin
+                  : onPressNext
+              }>
+              <ButtonText>
+                <Trans>Next</Trans>
+              </ButtonText>
+              {isProcessing && <ButtonIcon icon={Loader} />}
+            </Button>
+          </>
         )}
       </View>
     </FormContainer>

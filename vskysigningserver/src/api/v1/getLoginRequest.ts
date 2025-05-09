@@ -2,6 +2,7 @@
 import * as crypto from 'crypto-browserify'
 import * as dotenv from 'dotenv'
 import {
+  IDENTITY_CREDENTIAL_PLAINLOGIN,
   IDENTITY_VIEW,
   LOGIN_CONSENT_WEBHOOK_VDXF_KEY,
   LoginConsentChallenge,
@@ -28,7 +29,10 @@ export const generateLoginRequest = async () => {
 
   const challenge = new LoginConsentChallenge({
     challenge_id: challengeId,
-    requested_access: [new RequestedPermission(IDENTITY_VIEW.vdxfid)],
+    requested_access: [
+      new RequestedPermission(IDENTITY_VIEW.vdxfid),
+      new RequestedPermission(IDENTITY_CREDENTIAL_PLAINLOGIN.vdxfid),
+    ],
     redirect_uris: [
       new RedirectUri(
         `${process.env.BASE_WEBHOOK_URL}/confirm-login`,
