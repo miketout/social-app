@@ -1,9 +1,6 @@
+import 'react-native-url-polyfill/auto'
 import 'fast-text-encoding'
-// @ts-ignore no decl -prf
-import findLast from 'array.prototype.findlast'
 export {}
-
-findLast.shim()
 
 // Fix Buffer in react native.
 global.Buffer = global.Buffer || require('buffer').Buffer
