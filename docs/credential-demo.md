@@ -31,39 +31,23 @@ Use `signdata` to encrypt the credentials. The credentials should be formatted a
 
 For the credential, the fields need to be set as follows
 * **version**: Set as 1
-* **credentialKey**: Use `iN6LYCurcypx7orxkFB73mWRq6Jetf23ck` for the username key and `iBnntHeXcHacGFSGY836MN1pL4U2KJhXWm` for the password key
+* **credentialKey**: Use `iN6LYCurcypx7orxkFB73mWRq6Jetf23ck` for the plain login key
 * **credential**: This is either the username or password
 * **scopes**: The i-address or name of the identity **signing** the login requests
 
 For encrypting a username, this would look as follows.
 ```bash
-./verus signdata '{
-  "address":"identity@",
+./verus -testnet signdata '{
+  "address":"iNP8ja6aDsG3dDgQcFpGwqfLhj5kPAiQF5",
   "vdxfdata": {
     "vrsc::data.type.object.credential":{
       "version": 1,
-      "credentialKey": "iN6LYCurcypx7orxkFB73mWRq6Jetf23ck",
-      "credential":"mytestusername",
-      "scopes": "TheSigningID@"
+      "credentialKey": "iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj",
+      "credential": ["username_here", "password_here"],
+      "scopes": ["AppID@"]
     }
   },
-  "encrypttoaddress": "address (encryption address)" 
-}'
-```
-
-For encrypting a password, this would look as follows.
-```bash
-./verus signdata '{
-  "address":"identity@",
-  "vdxfdata": {
-    "vrsc::data.type.object.credential":{
-      "version": 1,
-      "credentialKey": "iBnntHeXcHacGFSGY836MN1pL4U2KJhXWm",
-      "credential":"mytestpassword",
-      "scopes": "TheSigningID@"
-    }
-  },
-  "encrypttoaddress": "address (encryption address)" 
+  "encrypttoaddress": "address_for_encryption"
 }'
 ```
 
@@ -73,7 +57,7 @@ Perform encryption to get both the username and password data descriptors.
 
 ### 3. Updating the Identity's Contentmultimap
 
-Now you should have the `extendedviewingkey`, and data descriptors for both the **username** and **password**. 
+Now you should have the `extendedviewingkey`, and a data descriptor for the credential.
 
 Generate the `vrsc::identity.credentials` key hashed with the `extendedviewingkey` using `getvdxfid`.
 ```bash
@@ -90,9 +74,6 @@ use `updateidentity` with the following format to add these to the contentmultim
     "vdxfid value": [
         {
           "vrsc::data.type.object.datadescriptor": username data descriptor
-        },
-        {
-          "vrsc::data.type.object.datadescriptor": password data descriptor
         }
     ]
   }
@@ -111,14 +92,6 @@ With the data descriptors, the command should look similar to the following.
             "flags": 5,
             "objectdata": "9617d77c118427b0d5642c51a2ffbae5c288e9d91c0b23d3bdc36d9d0ee73ef73c7191bdb8b821274975f7785b718b1b19a9cb038d2476dc96d520439bb4fbb95e3e36122a9790c9c60cedbdb9e4f49acf2c5f4307931171ad266h508e336f9ee49903fe56c96aa523ea3caa20d9bda79b074c71f51b9cfed874c7d6dba07242d29a4d5b48688e673febbbee0f9f65c11b72d35ff264",
             "epk": "bf5a310cfd6e74cc8f1c2a4659232f30ea4e31a429d5d7c27080e349e9b1ec1d"
-          }
-        },
-        {
-          "vrsc::data.type.object.datadescriptor": {
-            "version": 1,
-            "flags": 5,
-            "objectdata": "dec9a90e5f1f0fa3276899b05fba3b038a0d6454daa423183a959cfa4b5fe32dfaf7d2bf76b832c4e20d6f2f168414474440d1f5f7d98382a2cd052639cdafe006d33f7e15c52287f9d12d07d5b41d1bf3028f32cd2d76f8321c6bb324sa3054248dc295fca9a4a90bdf673d7b38638f2cf275399a4250e790db4870f42b9630d7f1a508cd5c691a0d0db9bec7222528e6809b8972d9",
-            "epk": "a54048e77af95d33f4b0a605e9cfe52be9168812c69370defdea82b834dd7ad5"
           }
         }
     ]
@@ -159,6 +132,8 @@ cd social-app
 
 <details>
 <summary>If Git for Windows is <strong>not</strong> working</summary>
+
+You will **need** to log into a GitHub account for this to work.
     
 Download [GitHub CLI](https://cli.github.com/)
 
