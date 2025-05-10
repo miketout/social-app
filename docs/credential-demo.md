@@ -32,10 +32,10 @@ Use `signdata` to encrypt the credentials. The credentials should be formatted a
 For the credential, the fields need to be set as follows
 * **version**: Set as 1
 * **credentialKey**: Use `iN6LYCurcypx7orxkFB73mWRq6Jetf23ck` for the plain login key
-* **credential**: This is either the username or password
-* **scopes**: The i-address or name of the identity **signing** the login requests
+* **credential**: This is the username and password in a list
+* **scopes**: The i-address or name of the identity **signing** the login requests in a list
 
-For encrypting a username, this would look as follows.
+For encrypting a username and password, this would look as follows.
 ```bash
 ./verus -testnet signdata '{
   "address":"iNP8ja6aDsG3dDgQcFpGwqfLhj5kPAiQF5",
@@ -53,7 +53,7 @@ For encrypting a username, this would look as follows.
 
 After running `signdata`, get the data descriptor in the array under the first `datadescriptor` key. This will be added to the contentmultimap later.  
 
-Perform encryption to get both the username and password data descriptors.
+Perform encryption to get the username and password descriptor.
 
 ### 3. Updating the Identity's Contentmultimap
 
@@ -73,7 +73,7 @@ use `updateidentity` with the following format to add these to the contentmultim
   "contentmultimap": {
     "vdxfid value": [
         {
-          "vrsc::data.type.object.datadescriptor": username data descriptor
+          "vrsc::data.type.object.datadescriptor": data descriptor
         }
     ]
   }
