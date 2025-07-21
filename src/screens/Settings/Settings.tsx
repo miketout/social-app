@@ -3,7 +3,7 @@ import {LayoutAnimation, Pressable, View} from 'react-native'
 import {Linking} from 'react-native'
 import {useReducedMotion} from 'react-native-reanimated'
 import {type AppBskyActorDefs, moderateProfile} from '@atproto/api'
-import {msg, t, Trans} from '@lingui/macro'
+import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 import {useNavigation} from '@react-navigation/native'
 import {type NativeStackScreenProps} from '@react-navigation/native-stack'
@@ -32,10 +32,12 @@ import * as Toast from '#/view/com/util/Toast'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, platform, tokens, useBreakpoints, useTheme} from '#/alf'
+import {AgeAssuranceDismissibleNotice} from '#/components/ageAssurance/AgeAssuranceDismissibleNotice'
 import {AvatarStackWithFetch} from '#/components/AvatarStack'
 import {useDialogControl} from '#/components/Dialog'
 import {SwitchAccountDialog} from '#/components/dialogs/SwitchAccount'
 import {Accessibility_Stroke2_Corner2_Rounded as AccessibilityIcon} from '#/components/icons/Accessibility'
+import {Bell_Stroke2_Corner0_Rounded as NotificationIcon} from '#/components/icons/Bell'
 import {BubbleInfo_Stroke2_Corner2_Rounded as BubbleInfoIcon} from '#/components/icons/BubbleInfo'
 import {ChevronTop_Stroke2_Corner0_Rounded as ChevronUpIcon} from '#/components/icons/Chevron'
 import {CircleQuestion_Stroke2_Corner2_Rounded as CircleQuestionIcon} from '#/components/icons/CircleQuestion'
@@ -62,6 +64,7 @@ import {
   shouldShowVerificationCheckButton,
   VerificationCheckButton,
 } from '#/components/verification/VerificationCheckButton'
+import {useActivitySubscriptionsNudged} from '#/storage/hooks/activity-subscriptions-nudged'
 
 type Props = NativeStackScreenProps<CommonNavigatorParams, 'Settings'>
 export function SettingsScreen({}: Props) {
@@ -94,6 +97,8 @@ export function SettingsScreen({}: Props) {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
+          <AgeAssuranceDismissibleNotice style={[a.px_lg, a.pt_xs, a.pb_xl]} />
+
           <View
             style={[
               a.px_xl,
@@ -178,6 +183,14 @@ export function SettingsScreen({}: Props) {
             <SettingsList.ItemIcon icon={HandIcon} />
             <SettingsList.ItemText>
               <Trans>Moderation</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+          <SettingsList.LinkItem
+            to="/settings/notifications"
+            label={_(msg`Notifications`)}>
+            <SettingsList.ItemIcon icon={NotificationIcon} />
+            <SettingsList.ItemText>
+              <Trans>Notifications</Trans>
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
           <SettingsList.LinkItem
@@ -351,6 +364,7 @@ function DevOptions() {
   const onboardingDispatch = useOnboardingDispatch()
   const navigation = useNavigation<NavigationProp>()
   const {mutate: deleteChatDeclarationRecord} = useDeleteActorDeclaration()
+  const [actyNotifNudged, setActyNotifNudged] = useActivitySubscriptionsNudged()
 
   const resetOnboarding = async () => {
     navigation.navigate('Home')
@@ -371,7 +385,11 @@ function DevOptions() {
       ...persisted.get('reminders'),
       lastEmailConfirm: lastEmailConfirm.toISOString(),
     })
-    Toast.show(t`You probably want to restart the app now.`)
+    Toast.show(_(msg`You probably want to restart the app now.`))
+  }
+
+  const onPressActySubsUnNudge = () => {
+    setActyNotifNudged(false)
   }
 
   return (
@@ -418,6 +436,15 @@ function DevOptions() {
           <Trans>Unsnooze email reminder</Trans>
         </SettingsList.ItemText>
       </SettingsList.PressableItem>
+      {actyNotifNudged && (
+        <SettingsList.PressableItem
+          onPress={onPressActySubsUnNudge}
+          label={_(msg`Reset activity subscription nudge`)}>
+          <SettingsList.ItemText>
+            <Trans>Reset activity subscription nudge</Trans>
+          </SettingsList.ItemText>
+        </SettingsList.PressableItem>
+      )}
       <SettingsList.PressableItem
         onPress={() => clearAllStorage()}
         label={_(msg`Clear all storage data`)}>
