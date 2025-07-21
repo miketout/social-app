@@ -21,6 +21,6 @@ For deeplinks to work on Linux, the operating system needs to be able to associa
 ## Project Requirements
 
 The project requires:
-- Node.js 20 [https://nodejs.org/en/blog/release/v20.9.0](https://nodejs.org/en/blog/release/v20.9.0)
-    - When installing Node.js, keep the default options.
+- Node.js 20
+  - For Windows: [https://nodejs.org/en/blog/release/v20.9.0](https://nodejs.org/en/blog/release/v20.9.0)
 - yarn (install after Node.js  with `npm install --global yarn`)

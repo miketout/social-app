@@ -9,10 +9,12 @@ You're all set!
 
 ## Running the VerusSky Web App
 
-Setup the [signing server environment variables](../vskysigningserver/README.md#environment-variables)
+To get the companion desktop wallet running for login, read the [Development Environment Setup](vsky/dev-setup.md) guide.
+
+Set up the [signing server environment variables](../vskysigningserver/README.md#environment-variables).
 
 ### For Linux and MacOS
-- `./scripts/run-setup.sh`
+- `./scripts/setup-dev.sh`
 - `./scripts/run-dev.sh`
 
 ### For Windows
