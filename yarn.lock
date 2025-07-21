@@ -3480,9 +3480,9 @@
     "@bitgo/blake2b-wasm" "^3.0.1"
     nanoassert "^2.0.0"
 
-"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#2b0f428afbdbc0aa9541aa60b310c8f4c41fd2c5":
+"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#80abaccd57652215bd5d9ebbe969ffe9c4266d25":
   version "1.9.6"
-  resolved "git+https://github.com/VerusCoin/BitGoJS.git#2b0f428afbdbc0aa9541aa60b310c8f4c41fd2c5"
+  resolved "git+https://github.com/VerusCoin/BitGoJS.git#80abaccd57652215bd5d9ebbe969ffe9c4266d25"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     bech32 "0.0.3"
@@ -8600,6 +8600,11 @@ axios@^1.3.4:
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
+b4a@^1.0.1:
+  version "1.6.7"
+  resolved "https://registry.yarnpkg.com/b4a/-/b4a-1.6.7.tgz#a99587d4ebbfbd5a6e3b21bdb5d5fa385767abe4"
+  integrity sha512-OnAYlL5b7LEkALw87fUVafQw5rVR9RjwGd4KUwNQ6DrrNmaVaUCgLipfVlzrPQ4tWOR9P0IXGNOx50jYCCdSJg==
+
 babel-jest@^29.2.1:
   version "29.6.3"
   resolved "https://registry.yarnpkg.com/babel-jest/-/babel-jest-29.6.3.tgz#e62f6c38f3ec8c147244168ee18ef0b919f10348"
@@ -9004,6 +9009,21 @@ bl@^4.0.3, bl@^4.1.0:
     buffer "^5.5.0"
     inherits "^2.0.4"
     readable-stream "^3.4.0"
+
+blake2b-wasm@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/blake2b-wasm/-/blake2b-wasm-2.4.0.tgz#9115649111edbbd87eb24ce7c04b427e4e2be5be"
+  integrity sha512-S1kwmW2ZhZFFFOghcx73+ZajEfKBqhP82JMssxtLVMxlaPea1p9uoLiUZ5WYyHn0KddwbLc+0vh4wR0KBNoT5w==
+  dependencies:
+    b4a "^1.0.1"
+    nanoassert "^2.0.0"
+
+"blake2b@https://github.com/VerusCoin/blake2b":
+  version "2.1.4"
+  resolved "https://github.com/VerusCoin/blake2b#578dc12b7b68a3ce76d1e1add1402b28a5890a6b"
+  dependencies:
+    blake2b-wasm "^2.4.0"
+    nanoassert "^2.0.0"
 
 bn.js@5.2.1, bn.js@^5.2.1:
   version "5.2.1"
@@ -20153,33 +20173,34 @@ vary@^1, vary@~1.1.2:
     bs58check "2.0.0"
     create-hash "1.2.0"
 
-"verus-typescript-primitives@git+https://github.com/mcstoer/verus-typescript-primitives.git#credential-class":
+"verus-typescript-primitives@git+https://github.com/mcstoer/verus-typescript-primitives.git#credential-class-iur":
   version "1.0.0"
-  resolved "git+https://github.com/mcstoer/verus-typescript-primitives.git#0d06b404ec018be0df7a47d5551b1cf241df59fc"
+  resolved "git+https://github.com/mcstoer/verus-typescript-primitives.git#02909300fb884b6274d95a01f0b3473a32e9cb4d"
   dependencies:
     base64url "3.0.1"
     bech32 "2.0.0"
+    blake2b "https://github.com/VerusCoin/blake2b"
     bn.js "5.2.1"
     bs58check "2.0.0"
     create-hash "1.2.0"
 
-"verusd-rpc-ts-client@git+https://github.com/mcstoer/verusd-rpc-ts-client.git#credential-class":
+"verusd-rpc-ts-client@git+https://github.com/mcstoer/verusd-rpc-ts-client.git#credential-class-iur":
   version "0.1.0"
-  resolved "git+https://github.com/mcstoer/verusd-rpc-ts-client.git#e8c9ab313a99030506d84db638607118934bb045"
+  resolved "git+https://github.com/mcstoer/verusd-rpc-ts-client.git#2656f2a12c89dfa5b5c2f9b422387251dd2e78fe"
   dependencies:
     axios "1.7.4"
-    verus-typescript-primitives "git+https://github.com/mcstoer/verus-typescript-primitives.git#credential-class"
+    verus-typescript-primitives "git+https://github.com/mcstoer/verus-typescript-primitives.git#credential-class-iur"
 
-"verusid-ts-client@git+https://github.com/mcstoer/verusid-ts-client.git#credential-class":
+"verusid-ts-client@git+https://github.com/mcstoer/verusid-ts-client.git#credential-class-iur":
   version "0.1.0"
-  resolved "git+https://github.com/mcstoer/verusid-ts-client.git#8abc5da1e06003978460c823227cad37125bbaad"
+  resolved "git+https://github.com/mcstoer/verusid-ts-client.git#e146dbb3df4604ca7ee2d39e5b6c3141515030d4"
   dependencies:
-    "@bitgo/utxo-lib" "git+https://github.com/VerusCoin/BitGoJS.git#2b0f428afbdbc0aa9541aa60b310c8f4c41fd2c5"
+    "@bitgo/utxo-lib" "git+https://github.com/VerusCoin/BitGoJS.git#80abaccd57652215bd5d9ebbe969ffe9c4266d25"
     axios "1.7.4"
     bignumber.js "9.1.0"
     bn.js "5.2.1"
-    verus-typescript-primitives "git+https://github.com/mcstoer/verus-typescript-primitives.git#credential-class"
-    verusd-rpc-ts-client "git+https://github.com/mcstoer/verusd-rpc-ts-client.git#credential-class"
+    verus-typescript-primitives "git+https://github.com/mcstoer/verus-typescript-primitives.git#credential-class-iur"
+    verusd-rpc-ts-client "git+https://github.com/mcstoer/verusd-rpc-ts-client.git#credential-class-iur"
 
 vlq@^1.0.0:
   version "1.0.1"
