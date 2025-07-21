@@ -8,6 +8,8 @@ This is for signing login requests.
 
 ### Environment Variables
 
+There are default values for all but the `IADDRESS` and `WIF`.
+
 - `BASE_URL`: URL for login responses to redirect to.
 - `BASE_WEBHOOK_URL`: URL for login responses to POST to.
 
@@ -17,3 +19,23 @@ This is for signing login requests.
 - `DEFAULT_URL`: URL for the RPC server for the chain.
 
 - `PORT` (optional): port that this server runs on.
+
+### Setup Guide
+
+<details open>
+<summary>If you have the contents for an <code>.env</code> file for the signing server:</summary>
+
+1. Create a `.env` file.
+2. Copy the contents into the file.
+
+</details>
+
+<details>
+<summary>If you do not have the contents:</summary>
+    
+1. Copy the `.env.example` file to `.env`.
+2. Find an identity you want to use to sign the requests. This should be the same identity used for **scopes** in the credentials from above.
+3. Get the i-address and associated WIF for that identity.
+4. Set `IADDRESS` and `WIF` variables to the matching values for the identity.
+   
+</details>
